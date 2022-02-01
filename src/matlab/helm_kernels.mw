@@ -1,0 +1,91 @@
+%------------------------------------------------------
+@function [u] = helm_c_p(zk,src,targ)
+%
+%     
+%   This suborutine evaluates the kernel i/4 H_{0} (k|x-y|) 
+%     x = targ, y = src
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:2,:);
+  targ0 = targ(1:2,:);
+
+  u = complex(zeros(m,n));
+  # FORTRAN helm_c_p(int[1] n, double[2,n] src0, int[1] m, double[2,m] targ0, dcomplex[1] zk, inout dcomplex[m,n] u);
+end
+%
+%
+%------------------------------------------------------
+@function [u] = helm_c_gn(zk,src,targ)
+%
+%   This subroutine evaluates the kernel i/4 nx \cdot \nabla_{x} H_{0}(k|x-y|)
+%   x = targ(1:2), nx = targ(3:4), y = src
+%  
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:2,:);
+  targ0 = targ(1:4,:);
+
+  u = complex(zeros(m,n));
+  # FORTRAN helm_c_gn(int[1] n, double[2,n] src0, int[1] m, double[4,m] targ0, dcomplex[1] zk, inout dcomplex[m,n] u);
+end
+%
+%
+%
+%
+%
+%------------------------------------------------------
+@function [ux,uy] = helm_c_g(zk,src,targ)
+%
+%   This subroutine evaluates the kernel i/4 nx \cdot \nabla_{x} H_{0}(k|x-y|)
+%   x = targ(1:2), nx = targ(3:4), y = src
+%  
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:2,:);
+  targ0 = targ(1:2,:);
+
+  ux = complex(zeros(m,n));
+  uy = complex(zeros(m,n));
+  # FORTRAN helm_c_g(int[1] n, double[2,n] src0, int[1] m, double[2,m] targ0, dcomplex[1] zk, inout dcomplex[m,n] ux, inout dcomplex[m,n] uy);
+end
+%
+%------------------------------------------------------
+@function [u] = helm_d_p(zk,src,targ)
+%
+%   This subroutine evaluates the kernel i/4 ny \cdot \nabla_{y} H_{0}(k|x-y|)
+%   x = targ, y = src(1:2), ny = src(3:4)
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:4,:);
+  targ0 = targ(1:2,:);
+
+  u = complex(zeros(m,n));
+  # FORTRAN helm_d_p(int[1] n, double[4,n] src0, int[1] m, double[2,m] targ0, dcomplex[1] zk, inout dcomplex[m,n] u);
+end
+
+%
+%
+%
+
+@function [u] = helm_d_gn(zk,src,targ)
+%
+%   This subroutine evaluates the kernel i/4 ny nx \cdot \nabla_{y} \nabla_{x} H_{0}(k|x-y|)
+%   x = targ, y = src(1:2), ny = src(3:4)
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:4,:);
+  targ0 = targ(1:4,:);
+
+  u = complex(zeros(m,n));
+  # FORTRAN helm_d_gn(int[1] n, double[4,n] src0, int[1] m, double[4,m] targ0, dcomplex[1] zk, inout dcomplex[m,n] u);
+end

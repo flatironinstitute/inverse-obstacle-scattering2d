@@ -1,0 +1,293 @@
+%
+%  This file contains the matlab wrappers for forming 
+%  Helmholtz layer potential matrices
+%
+%
+@function [xmat] = slp_mat(zk,norder,h,srcinfo)
+%
+%  Representation:
+%    u = S_{k}[\sigma]
+%
+%  Data returned:
+%    Dirichlet data (u)
+%
+%
+%  Input: 
+%    zk - Helmholtz parameter
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(n,n)
+%       slp matrix
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (6,n)');
+  xmat = complex(zeros(n),0);
+  #FORTRAN slp_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, dcomplex[1] zk, inout dcomplex[n,n] xmat);
+end
+%
+%
+@function [xmat] = dlp_ext_mat(zk,norder,h,srcinfo)
+%
+%  Representation:
+%    u = D_{k}[\sigma]
+%
+%  Data returned:
+%    Dirichlet data (u)
+%
+%
+%  Input: 
+%    zk - Helmholtz parameter
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(n,n)
+%       dlp matrix
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (5,n)');
+  xmat = complex(zeros(n),0);
+  #FORTRAN dlp_ext_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, dcomplex[1] zk, inout dcomplex[n,n] xmat);
+end
+%  
+%
+%
+@function [xmat] = comb_ext_mat(zpars,norder,h,srcinfo)
+%
+%  Representation:
+%    u = \alpha S_{k} [\sigma] + \beta D_{k}[\sigma]
+%
+%  Data returned:
+%    Dirichlet data (u)
+%
+%
+%  Input: 
+%    zpars(3) - 
+%      zpars(1) - Helmholtz paramter
+%      zpars(2) - single layer strength
+%      zpars(3) - double layer strength
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(n,n)
+%       combined field matrix
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (5,n)');
+  xmat = complex(zeros(n),0);
+  #FORTRAN comb_ext_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, dcomplex[3] zpars, inout dcomplex[n,n] xmat);
+end
+%  
+%
+%
+%  
+%
+%
+@function [xmat] = sprime_ext_mat(zk,norder,h,srcinfo)
+%
+%  Representation:
+%    u = S_{k} [\sigma] 
+%
+%  Data returned:
+%    Neumann data (du/dn)
+%
+%
+%  Input: 
+%    zk - Helmholtz paramter
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(n,n)
+%       combined field matrix
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (5,n)');
+  xmat = complex(zeros(n),0);
+  #FORTRAN sprime_ext_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, dcomplex[1] zk, inout dcomplex[n,n] xmat);
+end
+%  
+%
+%
+%
+%  
+%
+%
+@function [xmat] = ddiff_neu_mat(zpars,norder,h,srcinfo)
+%
+%  Representation:
+%    u = D_{k1} - D_{k2} [\sigma] 
+%
+%  Data returned:
+%    Neumann data (du/dn)
+%
+%
+%  Input: 
+%    zpars(2) - 
+%      zpars(1) - Helmholtz paramter (k1)
+%      zpars(2) - Helmholtz paramter (k2)
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(n,n)
+%       combined field matrix
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (5,n)');
+  xmat = complex(zeros(n),0);
+  #FORTRAN ddiff_neu_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, dcomplex[2] zpars, inout dcomplex[n,n] xmat);
+end
+%  
+%
+%
+%
+%
+%
+%
+@function [xmat] = ddiff0_neu_mat(zpars,norder,h,srcinfo)
+%
+%  Representation:
+%    u = D_{k1} - D_{0} [\sigma] 
+%
+%  Data returned:
+%    Neumann data (du/dn)
+%
+%
+%  Input: 
+%    zpars(1) - 
+%      zpars(1) - Helmholtz paramter (k1)
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(n,n)
+%      d_{k}' - D_{0}'
+%       
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (5,n)');
+  xmat = complex(zeros(n),0);
+  #FORTRAN ddiff0_neu_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, dcomplex[1] zpars, inout dcomplex[n,n] xmat);
+end
+%  
+%
+%
+%
+%
+@function [xmat] = lap_dlp_mat(norder,h,srcinfo)
+%
+%  Representation:
+%    u = D_{0} [\sigma] 
+%
+%  Data returned:
+%    dirichlet data (du/dn)
+%
+%
+%  Input: 
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(n,n)
+%      D_{0}
+%       
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (5,n)');
+  xmat = complex(zeros(n),0);
+  #FORTRAN lap_dlp_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, inout dcomplex[n,n] xmat);
+end
+%  
+%
+%
+%
+%
+%
+%
+@function [xmat] = transmission_mat(zks,a,b,norder,h,srcinfo)
+%
+%
+%  Representation
+%    u_{i}  = -(1/b_{i}) S_{k_{i}}[\sigma] + \frac{1}{b_{i}} D_{k_{i}}[\mu]
+%    
+%  PDE 
+%
+%  [au]/q = f/q, [b du/dn] = g
+%  q = 0.5*(a_{1}/b_{1} + a_{2}/b_{2})
+%
+%  Unknown ordering \sigma_{1},\mu_{1},\sigma_{2},\mu_{2}....
+%  Output ordering [au]/q_{1}, [b du/dn]_{1}, [au]/q_{2}, [b du/dn]_{2}...
+%
+%  Input: 
+%    zks(2) - complex
+%       Helmholtz parameters
+%    a(2) - complex
+%       scaling for jump in u
+%    b(2) - complex
+%      scaling for jump in dudn
+%    norder - Alpert quadrature rule order
+%    srcinfo(6,n) - source info
+%       srcinfo(1:2,:) - locations
+%       srcinfo(3:4,:) - normals
+%       srcinfo(5,:) - dsdt
+%       srcinfo(6,:) - curvature
+%
+%    h - step size in parameter space
+%
+%  Output:
+%    xmat - complex(2*n,2*n)
+%       transmission matrix
+
+  [m,n] = size(srcinfo);
+  assert(m==6,'srcinfo must be of shape (5,n)');
+  xmat = complex(zeros(2*n),0);
+  nsys = 2*n;
+  #FORTRAN trans_mat(int[1] n,int[1] norder,double[1] h, double[6,n] srcinfo, dcomplex[2] zks, dcomplex[2] a, dcomplex[2] b, inout dcomplex[nsys,nsys] xmat);
+end
+  

@@ -1,0 +1,51 @@
+%------------------------------------------------------
+@function [u] = lap_c_p(src,targ)
+%
+%     
+%   This suborutine evaluates the kernel -1/2pi log(r) 
+%     x = targ, y = src
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:2,:);
+  targ0 = targ(1:2,:);
+
+  u = complex(zeros(m,n));
+  # FORTRAN lap_c_p(int[1] n, double[2,n] src0, int[1] m, double[2,m] targ0, inout dcomplex[m,n] u);
+end
+%
+%
+%------------------------------------------------------
+@function [u] = lap_c_gn(src,targ)
+%
+%   This subroutine evaluates the kernel -1/2pi nx \cdot \nabla_{x} log(|x-y|)
+%   x = targ(1:2), nx = targ(3:4), y = src
+%  
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:2,:);
+  targ0 = targ(1:4,:);
+
+  u = complex(zeros(m,n));
+  # FORTRAN lap_c_gn(int[1] n, double[2,n] src0, int[1] m, double[4,m] targ0, inout dcomplex[m,n] u);
+end
+%
+%
+%------------------------------------------------------
+@function [u] = lap_d_p(src,targ)
+%
+%   This subroutine evaluates the kernel -1/2\pi ny \cdot \nabla_{y} log(|x-y|)
+%   x = targ, y = src(1:2), ny = src(3:4)
+%
+  [n0,n] = size(src);
+  [n1,m] = size(targ);
+
+  src0 = src(1:4,:);
+  targ0 = targ(1:2,:);
+
+  u = complex(zeros(m,n));
+  # FORTRAN lap_d_p(int[1] n, double[4,n] src0, int[1] m, double[2,m] targ0, inout dcomplex[m,n] u);
+end

@@ -1,0 +1,248 @@
+%
+%
+%  This file contains the matlab wrappers 
+%  for resampling a curve with a given bandwidth
+% 
+%
+@function [varargout] = resample_curve(srcinfo,rl,nh,hcoefs,nout,eps)
+%
+%  This subroutine resamples a given curve whose xy 
+%  and attempts to pass a bandlimited curve thorugh them.
+%
+%  Makes no assumption about the input being equispaced to begin with
+%
+%  Input arguments:
+%    srcinfo(6,n) -
+%      srcinfo(1:2,:) - x,y coordinates of the input points
+%      srcinfo(3:4,:) - x and y component of normals
+%      srcinfo(5,:) - dst at input points 
+%      srcinfo(6,:) curv at input points
+%    h - 
+%       Length of parameter space/n
+%    rl - The input curve is assumed to be a map from
+%       [0,rl] \to R^{2}
+%    nh - number of non-zero coeffs in h
+%    hcoefs - the coeffs
+%       h = \sum_{j=0}^{nh} c_{j} \cos(2*pi*t/rl) +
+%          \sum_{j=1}^{nh} s_{j} \sin(2*pi*t/rl)
+%    where hcoefs(1:nh+1) = c_{j} and hcoefs(nh+2:2*nh+1) = s_{j}
+%    nout -
+%      (optional) number of points at which output curve
+%      should be sampled
+%    eps - 
+%      (optional) desired accuracy for interpolation of
+%      output curve thorugh input points. Default value is
+%      1e-13.
+%  
+%  Output arguemnts:
+%    srcinfoout(6,nout) - 
+%      resampled curve
+%    hout - 
+%      spacing between points in parameter space
+%    rltot -
+%      (optional, if requested) Length of the curve
+%    ier - 
+%       (optional, if requested) error code for 
+%        obtainining arc length parametrization
+%    tts(1:nout) -
+%       (optional, if requested) location between
+%        [0,rl] corresponding to equispaced nodes
+%
+  [~,n] = size(srcinfo);
+  if( nargout < 2 || nargout > 5)
+    fprintf('invalid number of output arguments\n');
+    fprintf('out arguments must be 3,4,5\n');
+    varargout(1:nargout) = {0};
+    return;
+  end
+
+  if (nargin == 4)
+    epsuse = 1e-13;
+    nuse = n + 4*nh;
+  elseif (nargin == 5)
+    epsuse = 1e-13;
+    nuse = nout;
+  elseif (nargin == 6)
+    epsuse = eps;
+    nuse = nout;
+  else
+    fprintf('invalid number of arguments\n');
+  end
+  xfft = fft(srcinfo(1,1:n))/n;
+  yfft = fft(srcinfo(2,1:n))/n;
+  dxdt = -srcinfo(4,:).*srcinfo(5,:);
+  dydt = srcinfo(3,:).*srcinfo(5,:);
+  dxfft = fft(dxdt)/n;
+  dyfft = fft(dydt)/n;
+
+  nx = n;
+  nhuse = 2*nh+1;
+  npar1 = 4*nx + nhuse;
+  a = zeros(npar1,1);
+  par1 = complex(a,0);
+  par1(1:n) = xfft + 1j*yfft;
+  par1((n+1):(2*n)) = dxfft + 1j*dyfft;
+
+ 
+  hfft = zeros(nhuse,1);
+  hfft(1) = hcoefs(1);
+  hfft(2:(nh+1)) = hcoefs(2:(nh+1))/2;
+  hfft((nh+2):nhuse) = flip(hcoefs(2:(nh+1)))/2;
+  hfft(2:(nh+1)) = hfft(2:(nh+1))+hcoefs((nh+2):nhuse)/2/1j;
+  hfft((nh+2):nhuse) = hfft((nh+2):nhuse)-flip(hcoefs((nh+2):nhuse))/2/1j;
+  dhfft = zeros(nhuse,1);
+  dhfft(2:(nh+1)) = hfft(2:(nh+1))*1j.*(1:nh)'*2*pi/rl;
+  dhfft((nh+2):nhuse) = -hfft((nh+2):nhuse)*1j.*flip(1:nh)'*2*pi/rl;
+  par1((2*n+1):(2*n+nhuse)) = hfft;
+  par1((2*n+nhuse+1):(2*(n+nhuse))) = dhfft;
+
+  
+  nn = nuse+1;
+  lw = 10000;
+  work = zeros(lw,1);
+  tts = zeros(nn,1);
+  ier = 0;
+  sinfo = zeros(4,nuse);
+  hout = 0.0;
+  rltot = 0.0;
+  lsave = 0;
+  
+  # FORTRAN curve_resampler_guru(inout int[1] ier, int[1] n, int[1] nhuse, dcomplex[npar1] par1, double[1] rl, int[1] nuse, double[1] epsuse, inout double[nn] tts, inout double[4,nuse] sinfo, inout double[1] hout, inout double[1] rltot, inout double[lw] work, int[1] lw, inout int[1] lsave);  
+  
+  srcinfoout = zeros(6,nuse);
+  srcinfoout(1,:) = sinfo(1,:);
+  srcinfoout(2,:) = sinfo(2,:);
+  srcinfoout(3,:) = sinfo(4,:);
+  srcinfoout(4,:) = -sinfo(3,:);
+  srcinfoout(5,:) = ones(1,nuse);
+  
+  varargout{1} = srcinfoout;
+  varargout{2} = hout;
+  if(nargout>=3)
+     varargout{3} = rltot;
+  end
+
+  if(nargout>=4)
+     varargout{4} = ier;
+  end
+
+  if(nargout>=5)
+     varargout{5} = tts(1:nuse);
+  end
+  
+end
+%
+%
+%
+%
+%
+%
+@function [varargout] = resample_curve_pts(xys,nb,eps,nuse)
+%
+%  This subroutine resamples a given curve through a collection
+%  of points xys and attempts to pass a bandlimited curve through
+%  them.
+%
+%  Input arguments:
+%    xys(2,n) -
+%      x,y coordinates of the input points
+%    nb - band limit of output curve
+%    eps - 
+%      (optional) desired accuracy for interpolation of
+%      output curve thorugh input points. Default value is
+%      1e-13.
+%    nuse - 
+%      max number of doublings in sampling points to achieve
+%      desired accuracy
+%      
+%  
+%  Output arguemnts:
+%    rltot - Length of the curve
+%    wsave(lsave) - array which stores info for resampling points
+%      later at desired values
+%
+  [~,n] = size(xys);
+  if( nargout < 2 || nargout > 3)
+    fprintf('invalid number of output arguments\n');
+    fprintf('out arguments must be 2,3\n');
+    varargout(1:nargout) = {0};
+    return;
+  end
+
+  if (nargin == 2)
+    epsuse = 1e-13;
+    nmax = 3;
+  elseif (nargin == 3)
+    epsuse = eps;
+    nmax = 3;
+  elseif (nargin == 4)
+    epsuse = eps;
+    nmax = nuse;
+  else
+    fprintf('invalid number of arguments\n');
+  end
+
+  nlarge = 0;
+  nout = 0;
+  lsave = 0;
+  lused = 0;
+  ierm = 0;
+  # FORTRAN simple_curve_resampler_mem(int[1] n, double[2,n] xys, int[1] nb, double[1] epsuse, int[1] nmax, inout int[1] nlarge, inout int[1] nout, inout int[1] lsave, inout int[1] lused, inout int[1] ierm); 
+
+  if(ierm == 4)
+    fprintf('nb too small resulting curve self intersecting');
+    fprintf('change nb or eps');
+    fprintf('returning without resampling curve');
+    varargout(1:nargout) = {0};
+  else if(ierm == 2)
+    fprintf('warning: desired interpolation accurcy not reached');
+    fprintf('try changing nb');
+  end
+
+  wsave = zeros(lsave,1);
+  nnn = n+1;
+  tts = zeros(nnn,1);
+  sinfo = zeros(6,nout);
+  hout = 0.0;
+  rltot = 0.0;
+  # FORTRAN simple_curve_resampler_guru(int[1] n, double[2,n] xys, int[1] nb, int[1] nlarge, int[1] lsave, int[1] lused, int[1] nout, inout double[6,nout] sinfo, inout double[1] hout, inout double[1] rltot, inout double[lsave] wsave, inout double[nnn] tts, inout int[1] ierm); 
+  
+  varargout{1} = rltot;
+  varargout{2} = wsave;
+  if(nargout>=3)
+    varargout{3} = tts(1:n);
+  end
+
+end
+%
+%
+%
+%
+@function [binfo] = eval_curve(ts,wsave)
+ %
+ %  This subroutine evaluates the precomputed
+ %  bandlimited curve generated using resample_curve
+ %  at a collection of points in parameter space.
+ %
+ %  Note it is the user's responsibility to ensure
+ %  that 0<ts(i)<lenght of curve, otherwise junk
+ %  values would be returned for ts which do not 
+ %  satisfy the criterion above
+ %
+ %  Input arguments:
+ %    ts -
+ %      coordinates where curve needs to be evaluated 
+ %    wsave(1:lsave) -
+ %      precomputed saved array from resample_curve
+ %
+ %  Output arguments:
+ %    binfo(6,n) -
+ %      x,y,rnx,rny,dst,curvature at requested points
+ %
+   tsuse = ts(:);
+   n = length(tsuse);
+   binfo = zeros(6,n);
+   lsave = length(wsave);
+
+   #FORTRAN eval_curve_multi(int[1] n, double[n] tsuse, int[1] lsave, double[lsave] wsave, inout double[6,n] binfo);
+end
