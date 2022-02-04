@@ -286,6 +286,7 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
     inverse_sol_data.fields_opt = fields_all{iter};
     inverse_sol_data.exit_criterion = exit_criterion;
     inverse_sol_data.optim_opts = optim_opts;
+    inverse_sol_data.kh = kh;
     if(verbose)
       fprintf('Completing inverse interation for frequency kh: %d\n',kh);
       fprintf('-------------------------------------\n');
