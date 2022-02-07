@@ -16,9 +16,9 @@ function out = issimple(xs,ys,nover)
     y_big_ft(noveruse*nn -nn/2 +1:end) = y_ft((nn/2+1):end);
     xbig = real(ifft(x_big_ft))*(noveruse);
     ybig = real(ifft(y_big_ft))*(noveruse);
-    %plot(xs,ys,xbig,ybig)
+    %plot(xs,ys,'b.',xbig,ybig,'r.')
     
-    P = polyshape(xbig,ybig);
+    P = polyshape(xbig,ybig,'KeepCollinearPoints',true);
 %     fprintf('NumRegions=%d\n',P.NumRegions)
     if P.NumRegions>1
         out = false;

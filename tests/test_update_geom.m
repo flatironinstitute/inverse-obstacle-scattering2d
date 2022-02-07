@@ -1,33 +1,44 @@
+function ipass = test_update_geom()
+ipass = 1;
+ifplot = false;
+
+
 n  = 600;
-addpath('../');
 a = 1.1;  
 b = 1.1;  
 src_info = geometries.ellipse(a,b,n);
 
-figure
-plot(src_info.xs,src_info.ys,'b.');
-axis equal
-drawnow;
+if(ifplot)
+    figure
+    plot(src_info.xs,src_info.ys,'b.');
+    axis equal
+    drawnow;
+end
 
 lambda_fun = @(t) sin(t + 0.3) + 0.1*cos(3*t) + 0.3;
 %lambda_fun = @(t) sin(t + 0.3);
 n = length(src_info.xs);
 ts = (0:(n-1))/n*2*pi;
 src_info.lambda = lambda_fun(ts).';
-figure
-clf
-plot(ts',src_info.lambda,'k.');
-drawnow;
+
+if(ifplot)
+    figure
+    clf
+    plot(ts',src_info.lambda,'k.');
+    drawnow;
+end
 
 nh = 0;
 hcoefs = 0;
 [src_out,ier,tts] = rla.update_geom(src_info,nh,hcoefs);
 
-figure
-clf
-plot(src_out.xs,src_out.ys,'k.');
-axis equal
-drawnow
+if(ifplot)
+    figure
+    clf
+    plot(src_out.xs,src_out.ys,'k.');
+    axis equal
+    drawnow
+end
 
 
 % test interpolated lambda
@@ -36,8 +47,14 @@ xs_out = src_out.xs/a;
 ys_out = src_out.ys/b;
 thet = atan2(ys_out,xs_out);
 lambda_test = lambda_fun(thet).';
-err = norm(lambda_out(:) - lambda_test(:))/norm(lambda_test(:));
-fprintf('error in lambda interpolation = %d\n',err);
+
+err_lam = norm(lambda_out(:) - lambda_test(:))/norm(lambda_test(:));
+if(err_lam>1e-15) 
+    ipass = 0;
+    fprintf('failed lambda interpolation in update_geom test: %d\n',err_lam);
+end
+
+
 
 
 % Test updated curve with
@@ -49,11 +66,14 @@ src_info = rmfield(src_info,'lambda');
 
 
 [src_out,ier] = rla.update_geom(src_info,nh,hcoefs);
-figure
-clf
-plot(src_out.xs,src_out.ys,'b.')
-axis equal
-drawnow
+
+if(ifplot)
+    figure
+    clf
+    plot(src_out.xs,src_out.ys,'b.')
+    axis equal
+    drawnow
+end
 
 % test all quantities associated with resampled curve
 xs = src_out.xs;
@@ -89,6 +109,19 @@ d2ysout = d2rfun(thet).*sin(thet) + 2*drfun(thet).*cos(thet) - rfun(thet).*sin(t
 curv_out = (dxsout.*d2ysout - dysout.*d2xsout)./dsout.^3;
 
 errcurv = norm(curv_out-src_out.H)/norm(src_out.H);
-fprintf('error in dxs = %d\n',errdxs);
-fprintf('error in dys = %d\n',errdys);
-fprintf('error in curvature =%d\n',errcurv);
+if(errdxs>1e-14) 
+    ipass = 0;
+    fprintf('failed dx/dt test in update_geom test: %d\n',errdxs);
+end
+
+if(errdys>1e-14) 
+    ipass = 0;
+    fprintf('failed dy/dt test in update_geom test: %d\n',errdys);
+end
+
+if(errcurv>1e-8) 
+    ipass = 0;
+    fprintf('failed curvature test in update_geom test: %d\n',errcurv);
+end
+
+end
