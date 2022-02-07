@@ -18,7 +18,7 @@ src_info = geometries.starn(coefs,nc,n);
 L = src_info.L;
 
 
-nk = 10;
+nk = 30;
 
 
 % Test obstacle Frechet derivative for Dirichlet problem
