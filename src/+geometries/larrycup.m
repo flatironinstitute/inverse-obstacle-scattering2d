@@ -24,7 +24,7 @@ function [src_info] = larrycup(a,b,n)
     src_info.paramL = 1.0;
     rsc = 2*pi/src_info.paramL;
     src_info.Der_param = specdiffmat_ds(n,ones(n,1))*rsc;
-    src_info.Der = specdiffmat(n,src_info.ds)*rsc;
-    src_info.H = get_curvature(src_info);
+    src_info.Der = specdiffmat_ds(n,src_info.ds)*rsc;
+    src_info.H = rla.get_curvature(src_info);
 
 end
