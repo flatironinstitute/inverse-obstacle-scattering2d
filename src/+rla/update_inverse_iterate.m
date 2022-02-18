@@ -280,7 +280,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             if(ier_gn ~=0)
                 mats_out_gn = mats;
                 fields_out_gn = fields;
+                res_gn = res_in;    
+            end
+            
+            if(res_gn >= res_in)
+                mats_out_gn = mats;
+                fields_out_gn = fields;
                 res_gn = res_in;
+                ier_gn = -5;
             end
         end
         if(strcmpi(optim_type,'sd')  || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
@@ -329,6 +336,13 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                 mats_out_sd = mats;
                 fields_out_sd = fields;
                 res_sd = res_in;
+            end
+            
+            if(res_sd >= res_in)
+                mats_out_sd = mats;
+                fields_out_sd = fields;
+                res_sd = res_in;
+                ier_sd = -5;
             end
         end
         

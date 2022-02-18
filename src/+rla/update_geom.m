@@ -108,7 +108,7 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
             nppw = opts.nppw;
             rlam = opts.rlam;
             Nw = L/rlam;
-            nout = ceil(nppw*Nw);
+            nout = max(ceil(nppw*Nw),300);
             if mod(nout,2)
                 nout = nout + 1;
             end

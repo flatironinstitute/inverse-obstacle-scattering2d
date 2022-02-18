@@ -163,6 +163,11 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
    src_info = src_init;
    for i=1:npath
        kh = u_meas{ik_list(i)}.kh;
+       if(isfield(opts,'use_lscaled_modes'))
+          if(opts.use_lscaled_modes)
+             opts.ncoeff_boundary_mult = 2*src_info.L/2/pi;
+          end
+       end
        [inv_data_all{i},src_out] = rla.inverse_solver(kh,src_info,bc, ...
           u_meas{ik_list(i)},optim_opts,opts);
        src_info = src_out;

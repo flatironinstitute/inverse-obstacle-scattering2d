@@ -33,6 +33,7 @@ function [] = post_process(inv_data,fname)
    ylim([rmin/10,rmax*10]);
    xlim([kmin-0.25,kmax+0.25]);
    xlabel('Frequency');
+   drawnow;
    
    
    figure;
@@ -43,6 +44,7 @@ function [] = post_process(inv_data,fname)
    ylim([rmin/10,rmax*10]);
    xlim([kmin-0.25,kmax+0.25]);
    xlabel('Frequency');
+   drawnow;
    
    
    figure;
@@ -52,6 +54,7 @@ function [] = post_process(inv_data,fname)
    title('Iteration count');
    xlim([kmin-0.25,kmax+0.25]);
    xlabel('Frequency');
+   drawnow;
    
    figure;
    plot(kh,exit_criterion,'k.','MarkerSize',10)
@@ -61,6 +64,7 @@ function [] = post_process(inv_data,fname)
    yticks([-1,1,2,3]);
    yticklabels({'Self-intersection','small res','small upd','max iter'})
    xlabel('Frequency')
+   drawnow;
    
    n = length(res_all);
    F(n) = struct('cdata',[],'colormap',[]);
@@ -96,6 +100,7 @@ function [] = post_process(inv_data,fname)
    xmax = xmid + 0.6*xdiff;
    ymin = ymid - 0.6*ydiff;
    ymax = ymid + 0.6*ydiff;
+   figure
    figure('Renderer','zbuffer')
    if(nargin == 1)
       plot(stmp{i}.xs,stmp{i}.ys,'k.')

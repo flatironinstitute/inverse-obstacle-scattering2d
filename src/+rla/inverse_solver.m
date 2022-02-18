@@ -149,11 +149,11 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
     
     opts_use = opts;
     if(isfield(opts_use,'ncoeff_boundary_mult'))
-        opts_use.ncoeff_boundary = floor(kh*ncoeff_boundary_mult);
+        opts_use.ncoeff_boundary = floor(kh*opts_use.ncoeff_boundary_mult);
     end
     
     if(isfield(opts_use,'ncoeff_impedance_mult'))
-        opts_use.ncoeff_impedance = floor(kh*ncoeff_impedance_mult);
+        opts_use.ncoeff_impedance = floor(kh*opts_use.ncoeff_impedance_mult);
     end
     
     maxit = 100;
