@@ -171,14 +171,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
    
     opts_use = opts;
     if(~isfield(opts,'ncoeff_boundary'))
-        ncoeff_boundary = ceil(2*abs(kh));
-        opts_use.ncoeff_boundary = ceil(2*abs(kh));
+        ncoeff_boundary = floor(2*abs(kh));
+        opts_use.ncoeff_boundary = floor(2*abs(kh));
     else
         ncoeff_boundary = opts.ncoeff_boundary;
     end
     if(~isfield(opts,'ncoeff_impedance'))
-        opts_use.ncoeff_impedance = ceil(0.5*abs(kh));
-        ncoeff_impedance = ceil(0.5*abs(kh));
+        opts_use.ncoeff_impedance = floor(0.5*abs(kh));
+        ncoeff_impedance = floor(0.5*abs(kh));
     else
         ncoeff_impedance = opts.ncoeff_impedance;
     end
@@ -218,22 +218,34 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
         verbose = opts.verbose;
     end
     
-    rhs = u_meas.uscat_tgt(:) - fields.uscat_tgt(:);
-    frechet_mats = rla.get_frechet_ders(kh,mats,src_info,u_meas,fields,bc,opts_use);
     
+    % update the geometry part
+    rhs = u_meas.uscat_tgt(:) - fields.uscat_tgt(:);
+    
+    bc_use = [];
+    bc_use.type = bc.type;
+    bc_use.invtype = 'o';
+    
+    frechet_mats = rla.get_frechet_ders(kh,mats,src_info,u_meas,fields,bc_use,opts_use);
     
     opts_update_geom = [];
     opts_update_geom.eps_curv = eps_curv;
     if(isfield(optim_opts,'n_curv'))
        opts_update_geom.n_curv = optim_opts.n_curv;
     else
-        opts_update_geom.n_curv = max(30,ncoeff_boundary);
+        opts_update_geom.n_curv = max(1,ncoeff_boundary);
     end
  
     opts_update_geom.nppw = nppw;
     opts_update_geom.rlam = rlam;
     
     res_in = norm(rhs(:))/norm(u_meas.uscat_tgt(:));
+    src_out = src_info;
+    mats_out = mats;
+    fields_out = fields;
+    res = res_in;
+    ier = 0;
+    
     
     if(strcmpi(bc.invtype,'o') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io'))
         deltas.nmodes_bdry = opts_use.ncoeff_boundary;
@@ -380,22 +392,174 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             res = res_sd;
         end      
     end
-    if(strcmpi(bc.invtype,'i') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io'))
-        deltas.nmodes_imp = ncoeff_impedance;
+    
+    
+    % Now update impedance holding boundary fixed
+    
+    
+    if((strcmpi(bc.invtype,'i') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io')) && ncoeff_impedance>0)
+        fprintf('Inside update iterate, kh = %d, ncoeff_impedance=%d \n',kh,ncoeff_impedance);
+        res_in = res;
+        bc_use = [];
+        bc_use.type = bc.type;
+        bc_use.invtype = 'i';
+        
+        
+        frechet_mats = rla.get_frechet_ders(kh,mats_out,src_out,u_meas, ...
+          fields_out,bc_use,opts_use);
         Minv = [real(frechet_mats.impedance); imag(frechet_mats.impedance)];
-        deltas.delta_impedance = Minv \ [real(rhs(:)); imag(rhs(:))];
-        nh = ncoeff_impedance;
-        hcoefs_use = deltas.delta_impedance(:);
-        n = length(src_out.xs);
-        t = 0:2*pi/n:2*pi*(1.0-1.0/n); 
-        h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
-        src_out.lambda = src_out.lambda + h_upd';  
-        
-        
-%       update matrices and fields after updated impedance        
-        mats_out = rla.get_fw_mats(kh,src_out,bc,u_meas,opts);
-        fields_out = rla.compute_fields(kh,src_out,mats_out,u_meas,bc,opts);
         rhs = u_meas.uscat_tgt(:) - fields_out.uscat_tgt(:);
-        res = norm(rhs(:))/norm(u_meas.uscat_tgt(:));
+        if(strcmpi(optim_type,'gn') || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
+            delta_imp_gn = Minv \ [real(rhs(:)); imag(rhs(:))];
+            delta_imp_gn0 = delta_imp_gn;
+            ier_gn = 10;
+            iter_filter_imp_gn = -1;
+            
+            for iter=1:maxit_filter
+                
+                src_out_gn = src_out;
+                nh = ncoeff_impedance;
+                hcoefs_use = delta_imp_gn(:);
+                n = length(src_out.xs);
+                t = 0:2*pi/n:2*pi*(1.0-1.0/n); 
+                h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
+                src_out_gn.lambda = src_out_gn.lambda + h_upd';  
+        
+                [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);
+                fields_out_gn = rla.compute_fields(kh,src_out_gn,mats_out_gn,u_meas,bc,opts);
+                rhs_gn = u_meas.uscat_tgt(:) - fields_out_gn.uscat_tgt(:);
+                res_imp_gn = norm(rhs_gn(:))/norm(u_meas.uscat_tgt(:));
+                
+                if(res_imp_gn <= res_in) 
+                    iter_filter_imp_gn = iter-1;
+                    break
+                else
+                    if(strcmpi(filter_type,'gauss-conv'))
+                        sigma_bd = 1.0/10^(iter-1);
+                        hg = 2/(2*ncoeff_impedance);
+                        N_var = ncoeff_impedance;
+                        tg = -1:hg:1;
+                        gauss_val = exp(-tg.*tg/sigma_bd);
+                        gauss_new = zeros(1,length(gauss_val));
+                        gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
+                        gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
+                        delta_imp_gn = (delta_imp_gn0'.*gauss_new)';
+                    elseif(strcmpi(filter_type,'step_length'))
+                        delta_imp_gn = delta_imp_gn0/(2^(iter));
+                    end
+                end
+            end
+            
+            if(iter_filter_imp_gn == -1)
+                iter_filter_imp_gn = maxit_filter;
+            end
+            
+            if(verbose)
+                fprintf('Post gn filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type,iter_filter_imp_gn,ier_gn);
+            end
+            
+            
+            if(res_imp_gn >= res_in)
+                mats_out_gn = mats;
+                fields_out_gn = fields;
+                res_imp_gn = res_in;
+                %ier_imp_gn = -5;
+            end
+        end
+        if(strcmpi(optim_type,'sd')  || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
+            delta_imp_sd = Minv'*[real(rhs(:)); imag(rhs(:))];
+            
+            t = delta_imp_sd'*delta_imp_sd/norm(Minv*delta_imp_sd)^2;
+            delta_imp_sd = t*delta_imp_sd;
+            delta_imp_sd0 = delta_imp_sd;
+            %ier_sd = 10;
+            iter_filter_imp_sd = -1;
+            ier_sd = 10;
+            
+            for iter=1:maxit_filter
+                
+                src_out_sd = src_out;
+                nh = ncoeff_impedance;
+                hcoefs_use = delta_imp_sd(:);
+                n = length(src_out.xs);
+                t = 0:2*pi/n:2*pi*(1.0-1.0/n); 
+                h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
+                src_out_sd.lambda = src_out_sd.lambda + h_upd';  
+        
+                [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
+                fields_out_sd = rla.compute_fields(kh,src_out_sd,mats_out_sd,u_meas,bc,opts);
+                rhs_sd = u_meas.uscat_tgt(:) - fields_out_sd.uscat_tgt(:);
+                res_imp_sd = norm(rhs_sd(:))/norm(u_meas.uscat_tgt(:));
+                if(res_imp_sd<=res_in) 
+                    iter_filter_imp_sd = iter-1;
+                    break
+                else
+                    if(strcmpi(filter_type,'gauss-conv'))
+                        sigma_bd = 1.0/10^(iter-1);
+                        hg = 2/(2*ncoeff_impedance);
+                        N_var = ncoeff_impedance;
+                        tg = -1:hg:1;
+                        gauss_val = exp(-tg.*tg/sigma_bd);
+                        gauss_new = zeros(1,length(gauss_val));
+                        gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
+                        gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
+                        delta_imp_sd = (delta_imp_sd0'.*gauss_new)';
+                    elseif(strcmpi(filter_type,'step_length'))
+                        delta_imp_sd = delta_imp_sd0/(2^(iter));
+                    end
+                end
+            end
+            if(iter_filter_imp_sd == -1)
+                iter_filter_imp_sd = maxit_filter;
+            end
+               
+            
+            if(verbose)
+                fprintf('Post sd filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type,iter_filter_imp_sd,ier_sd);
+            end
+            
+            
+            
+            if(res_imp_sd >= res_in)
+                mats_out_sd = mats;
+                fields_out_sd = fields;
+                res_imp_sd = res_in;
+                %ier_imp_sd = -5;
+                
+            end
+        end
+        
+        
+        if(strcmpi(optim_type,'gn'))
+            deltas.iter_imp_type = 'gn';
+        elseif(strcmpi(optim_type,'sd'))
+            deltas.iter_imp_type = 'sd';
+        elseif(strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
+            if(res_imp_gn < res_imp_sd)
+                deltas.iter_imp_type = 'gn';
+            else
+                deltas.iter_imp_type = 'sd';
+            end
+            
+            fprintf('optimization method used = %s\n',deltas.iter_imp_type);
+        end
+        
+        if(strcmpi(deltas.iter_imp_type,'gn'))
+            deltas.delta_impedance = delta_imp_gn;
+            deltas.iter_filter_impedance = iter_filter_imp_gn;
+            mats_out = mats_out_gn;
+            fields_out = fields_out_gn;
+            src_out = src_out_gn;
+            res = res_imp_gn;
+            
+        elseif(strcmpi(deltas.iter_imp_type,'sd'))
+            deltas.delta_impedance = delta_imp_sd;
+            deltas.iter_filter_impedance = iter_filter_imp_sd;
+            
+            mats_out = mats_out_sd;
+            fields_out = fields_out_sd;
+            src_out = src_out_sd;
+            res = res_imp_sd;
+        end      
     end 
 end

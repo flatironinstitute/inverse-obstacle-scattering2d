@@ -1,10 +1,11 @@
 function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
-                          optim_opts,opts,src_init,rla_path_opts)
+                          optim_opts,opts,src_init,lam_init,rla_path_opts)
 % 
 %  This subroutine endeavors to find the optimal \Gamma, \lambda such that
 %  for a given path in frequency space the objective function
 %
-%  \sum_{j}| F(k_{ell},\bx_{j},d_{j}, \Gamma, \lambda - u_meas(ik_list(\ell)).uscat_tgt(j)|^2
+%  \sum_{j}| F(k_{ell},\bx_{j},d_{j}, \Gamma, 
+%     \lambda - u_meas(ik_list(\ell)).uscat_tgt(j)|^2
 %     is minimized for each \ell,
 %
 %  where the path in k_{\ell}, ik_list(\ell) can be specified by the user
@@ -129,8 +130,11 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
 
                       
                       
-   if(nargin<6)
+   if(nargin<7)
        rla_path_opts = [];
+   end
+   if(nargin<6) 
+       lam_init = [];
    end
    if(nargin<5)
        src_init = [];
@@ -158,9 +162,23 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
        kh0 = u_meas{ik_list(1)}.kh;
        n = max(100,ceil(abs(kh0)*nppw));
        src_init = geometries.ellipse(1,1,n);
+       
+       
    end
+   
+   
    inv_data_all = cell(1,npath);
    src_info = src_init;
+   n = length(src_info.xs);
+   if(isempty(lam_init))
+       src_info.lambda = ones(n,1);
+   else
+       % fix this initialization
+       t = 0:2*pi/n:2*pi*(1-1/n);
+       src_info.lambda = lam_init(t(:));
+       
+   end
+   
    for i=1:npath
        kh = u_meas{ik_list(i)}.kh;
        if(isfield(opts,'use_lscaled_modes'))
