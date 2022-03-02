@@ -230,11 +230,19 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
     
     opts_update_geom = [];
     opts_update_geom.eps_curv = eps_curv;
+    
+    n_curv_min = 1;
+    if(isfield(optim_opts,'n_curv_min'))
+       n_curv_min = optim_opts.n_curv_min;
+    end
+    
     if(isfield(optim_opts,'n_curv'))
        opts_update_geom.n_curv = optim_opts.n_curv;
     else
-        opts_update_geom.n_curv = max(1,ncoeff_boundary);
+        opts_update_geom.n_curv = max(n_curv_min,ncoeff_boundary);
     end
+    
+    
  
     opts_update_geom.nppw = nppw;
     opts_update_geom.rlam = rlam;
