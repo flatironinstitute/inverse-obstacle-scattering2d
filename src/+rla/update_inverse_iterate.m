@@ -405,7 +405,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
     % Now update impedance holding boundary fixed
     
     
-    if((strcmpi(bc.invtype,'i') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io')) && ncoeff_impedance>0)
+    if((strcmpi(bc.invtype,'i') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io')) && ncoeff_impedance>=0)
         fprintf('Inside update iterate, kh = %d, ncoeff_impedance=%d \n',kh,ncoeff_impedance);
         res_in = res;
         bc_use = [];
@@ -430,7 +430,12 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                 hcoefs_use = delta_imp_gn(:);
                 n = length(src_out.xs);
                 t = 0:2*pi/n:2*pi*(1.0-1.0/n); 
-                h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
+                if (nh == 0)
+                    h_upd = cos(t*0)*hcoefs_use(1);
+                else
+                    h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + ...
+                        sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
+                end
                 src_out_gn.lambda = src_out_gn.lambda + h_upd';  
         
                 [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);

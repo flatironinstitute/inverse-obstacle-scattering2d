@@ -1,7 +1,7 @@
 function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
 %
 % get_fw_mats returns the relevant forward matrices for solving
-% Dirichlet, Neumann/ Impedance boundary value problem
+% Dirichlet, Neumann, Impedance or Transmission boundary value problems
 % along with an error estimate in the solution if requested.
 %
 % Input:
@@ -13,13 +13,20 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
 %      src_info.dys = dydt;
 %      src_info.ds = sqrt(dxdt^2 + dydt^2);
 %      src_info.h = h in trapezoidal parametrization;
-%      src_info.lambda - imepdance value at discretization nodes 
+%      src_info.lambda - impedance value at discretization nodes 
 %           (optional if solving impedance boundary value problem);
 %   bc - boundary condition struct;
 %     bc.type = type of boundary condition;
 %        'd' or 'Dirichlet' for dirichlet
 %        'n' or 'Neumann' for Neumann
 %        'i' or 'Impedance' for impedance
+%        't' or 'Transmission' for transmission
+%     the transmission problem requires additional parameters:
+%        these are all length 2 arrays, first entry is interior value,
+%        second is exterior value
+%        bc.transk = transmission wave numbers
+%        bc.transa = coefficients for jump in potential
+%        bc.transb = coefficients for jump in normal
 %   sensor_info - sensor_info struct
 %       sensor_info.xtgt = x coordinates of targets;
 %       sensor_info.ytgt = y coordinates of targets;
@@ -30,6 +37,7 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
 %      opts.test_analytic - flag for whether to test for analytic solution
 %         (false)
 %      opts.src_in - interior point if testing analytic solution (0,0)
+%      opts.src_out - exterior point if testing analytic solution 2*(xmax,ymax)
 %      opts.store_all - store all matrices that arose in discretiztion
 %      (false)
 % Output
@@ -73,6 +81,16 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
             fprintf('Interior source points not set, assuming to be origin\n\n');
           end
           src_in = zeros(2,1);
+       end
+       if isfield(opts,'src_out')
+          src_out = opts.src_out;
+       else
+	 xmax = max(src_info.xs(:));  ymax = max(src_info.ys(:));
+          if(verbose)
+            fprintf('Exterior source points not set, assuming bounded domain\n');
+	    fprintf('Exterior point (%5.2e, %5.2e) used\n\n',2*xmax,2*ymax);
+          end
+          src_out = [2*xmax;2*ymax];
        end
    end
    
@@ -158,6 +176,63 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
               mats.S = S;
               mats.Sp = Sp;
               mats.D = D;
+          end
+      end
+      
+      % matrices for transmission boundary value problem
+      % Representation for solution:
+      %    u_{i}  = -(1/b_{i}) S_{k_{i}}[\sigma] + \frac{1}{b_{i}} D_{k_{i}}[\mu]
+      %    
+      %  PDE 
+      %
+      %  [au]/q = f/q, [b du/dn] = g
+      %  q = 0.5*(a_{1}/b_{1} + a_{2}/b_{2})
+      %
+      %  Unknown ordering \sigma_{1},\mu_{1},\sigma_{2},\mu_{2}....
+      %  Output ordering [au]/q_{1}, [b du/dn]_{1}, [au]/q_{2}, [b du/dn]_{2}
+      %
+      if(strcmpi(bctype,'t') || strcmpi(bctype,'Transmission'))
+          zks = bc.transk; a = bc.transa; b = bc.transb;
+	      q = 0.5*(a(1)/b(1)+a(2)/b(2));
+          mats.Fw_mat = transmission_mat(zks,a,b,norder,h_bd,srctmp);
+          mats.inv_Fw_mat = inv(mats.Fw_mat);
+          
+          %operators to target
+          S_tgt = slmat_out(zks(2),h_bd,src,tgt);
+          D_tgt = dlmat_out(zks(2),h_bd,src,tgt); 
+          [m1,n1] = size(D_tgt);
+          mats.sol_to_receptor = zeros(m1,2*n1,'like',1.0+1i);
+          mats.sol_to_receptor(:,1:2:end) = -S_tgt/b(2);
+          mats.sol_to_receptor(:,2:2:end) = D_tgt/b(2);
+          mats.bdrydata_to_receptor = mats.sol_to_receptor*mats.inv_Fw_mat;
+          %bdry values of v2
+          S2  = slp_mat(zks(2),norder,h_bd,srctmp);
+          Sp2 = sprime_ext_mat(zks(2),norder,h_bd,srctmp) + eye(n_bd)/2;
+          D2  = dlp_ext_mat(zks(2),norder,h_bd,srctmp) - eye(n_bd)/2;
+          mats.Fw_dir_mat = zeros(n1,2*n1,'like',1.0+1i);
+	      mats.Fw_dir_mat(:,1:2:end) = -S2/b(2);
+	      mats.Fw_dir_mat(:,2:2:end) = D2/b(2);
+          
+          if (test_analytic)
+            %data for checking  
+            uin_a = helm_c_p(zks(2),src_in,srctmp);
+            dudnin_a = helm_c_gn(zks(2),src_in,srctmp);
+            uout_a = helm_c_p(zks(1),src_out,srctmp);
+            dudnout_a = helm_c_gn(zks(1),src_out,srctmp);
+
+            rhs_a = zeros(2*n1,1);
+            rhs_a(1:2:end) = (a(2)*uin_a-a(1)*uout_a)/q;
+            rhs_a(2:2:end) = (b(2)*dudnin_a-b(1)*dudnout_a);
+
+            sol_a = mats.inv_Fw_mat * rhs_a;
+    
+            utest = mats.sol_to_receptor * sol_a;  
+            uex = helm_c_p(zks(2),src_in,tgt); 
+            varargout{1} = norm(utest(:)-uex(:))/norm(uex(:));
+          end
+          
+          if(store_all)
+              % nothing for now
           end
       end
       

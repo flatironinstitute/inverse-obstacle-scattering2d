@@ -43,6 +43,14 @@ function fields = compute_fields(kh,src_info,mats,sensor_info,bc,opts)
 %        'd' or 'Dirichlet' for dirichlet
 %        'n' or 'Neumann' for Neumann
 %        'i' or 'Impedance' for impedance
+%        't' or 'Transmission' for transmission
+%     the transmission problem requires additional parameters:
+%        these are all length 2 arrays, first entry is interior value,
+%        second is exterior value
+%        bc.transk = transmission wave numbers
+%        bc.transa = coefficients for jump in potential
+%        bc.transb = coefficients for jump in normal
+  
 %     bc.invtype = type of inverse problem;
 %        'o' or 'obstacle' for obstacle only
 %        'oi' or 'obsctacle and impedance' for both obstacle and impedance;
@@ -110,13 +118,22 @@ function fields = compute_fields(kh,src_info,mats,sensor_info,bc,opts)
      bd_data = -(fields.dudninc + 1i*kh*lambda_rep.*fields.uinc);
    end
 
-
+   if(strcmpi(bc.type,'t') || strcmpi(bc.type,'Transmission'))
+     a = bc.transa; b = bc.transb; zks = bc.transk;
+     q = 0.5*(a(1)/a(2) + a(2)/b(2));
+     n1 = numel(xs);
+     bd_data = zeros(2*n1,n_dir,'like',1.0+1i);
+     bd_data(1:2:end,:) = -a(2)*fields.uinc/q;
+     bd_data(2:2:end,:) = -b(2)*fields.dudninc;
+   end
+   
    if(~ifflam)
      uscat_tgt_all = mats.bdrydata_to_receptor*bd_data;
      uscat_tgt_all = uscat_tgt_all(:);
      fields.uscat_tgt = uscat_tgt_all(induse);
      sigma = mats.inv_Fw_mat*bd_data;
      fields.uscat = mats.Fw_dir_mat*sigma;
+
      if(strcmpi(bc.type,'d') || strcmpi(bc.type,'Dirichlet'))
          bd_data2 = fields.dudninc - 1i * kh *fields.uinc;
          fields.dudnscat = mats.Fw_neu_mat*bd_data2 - fields.dudninc;

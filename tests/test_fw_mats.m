@@ -33,6 +33,16 @@ function ipass = test_fw_mats()
     kh = 2.2;
 
     bc = [];
+    bc.type = 'Transmission';
+    bc.transk = [2;1]; bc.transa = [1.3;1]; bc.transb = [1.5,1.1];
+    [mats,erra] = rla.get_fw_mats(kh,src_info,bc,sensor_info,opts);
+    if(erra>1e-11) 
+        ipass = 0;
+        fprintf('failed Transmission test in fw_mats test: %d\n',erra);
+    end
+
+    
+    bc = [];
     bc.type = 'Dirichlet';
 
 
@@ -66,6 +76,7 @@ function ipass = test_fw_mats()
         ipass = 0;
         fprintf('failed Impedance test in fw_mats test: %d\n',erra);
     end
+    
 
 
 end

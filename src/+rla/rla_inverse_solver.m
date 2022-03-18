@@ -86,6 +86,8 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
 %         ceil(ncoeff_boundary_mult*abs(kh)) (2)
 %      opts.ncoeff_impedance_mult: multiplier for number of terms in impedance update
 %         ceil(ncoeff_impedance_mult*abs(kh)) (0.5)
+%      opts.ncoeff_impedance_max: maximum number of terms in impedance 
+%         update (Inf)
 %      opts.nppw: points per wavelength for discretizing updated curve (10)
 %      opts.verbose: flag for displaying verbose messages during run
 %      (false)

@@ -3,6 +3,8 @@ function [xmat] = transmission_mat(zks,a,b,norder,h,srcinfo)
 %
 %  Representation
 %    u_{i}  = -(1/b_{i}) S_{k_{i}}[\sigma] + \frac{1}{b_{i}} D_{k_{i}}[\mu]
+%
+%  i = 1 is interior, i=2 is exterior.
 %    
 %  PDE 
 %

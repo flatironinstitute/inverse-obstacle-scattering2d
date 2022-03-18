@@ -101,6 +101,8 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
 %         ceil(ncoeff_boundary_mult*abs(kh)) (2)
 %      opts.ncoeff_impedance_mult: multiplier for number of terms in impedance update
 %         ceil(ncoeff_impedance_mult*abs(kh)) (0.5)
+%      opts.ncoeff_impedance_max: maximum number of coeffs to be used
+%         in representing impedance. (Inf)
 %      opts.nppw: points per wavelength for discretizing updated curve (10)
 %      opts.verbose: flag for displaying verbose messages during run
 %      (false)
@@ -147,6 +149,7 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
         verbose = opts.verbose;
     end
     
+    
     opts_use = opts;
     if(isfield(opts_use,'ncoeff_boundary_mult'))
         opts_use.ncoeff_boundary = floor(kh*opts_use.ncoeff_boundary_mult);
@@ -154,6 +157,11 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
     
     if(isfield(opts_use,'ncoeff_impedance_mult'))
         opts_use.ncoeff_impedance = floor(kh*opts_use.ncoeff_impedance_mult);
+        if (isfield(opts_use,'ncoeff_impedance_max'))
+            opts_use.ncoeff_impedance = ...
+                min(opts_use.ncoeff_impedance, ...
+                opts_use.ncoeff_impedance_max);
+        end
     end
     
     maxit = 100;
