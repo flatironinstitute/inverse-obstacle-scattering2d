@@ -24,11 +24,6 @@ end
 src_info = geometries.starn(coefs,nc,n);
 L = src_info.L;
 
-t = 0:2*pi/n:2*pi*(1.0-1.0/n);
-lam = @(t) 2 + sin(2*t) + 0.3*cos(6*t) + 0.1*sin(10*t);
-%lam = @(t) 1.4;
-%lam = @(t) 1;
-src_info.lambda = lam(t)';
 nk = 17;
 
 
@@ -95,7 +90,7 @@ alpha = rho2./(rho1*(1+1i*delta./kh));
 k1fac = sqrt(1+1i*delta./kh)/c1;
 zks(1,:) = kh.*k1fac;
 zks(2,:) = kh;
-bs(2,:) = alpha;
+bs(1,:) = alpha;
 
 %kh = 7.5*1.5;
 
@@ -111,9 +106,6 @@ for ik=1:nk
    hcoefs = zeros(2*nh+1,1);
    [src_info,varargout] = rla.update_geom(src_info,nh,hcoefs);
    
-   
-   t = 0:2*pi/n:2*pi*(1.0-1.0/n);
-   src_info.lambda = lam(t)';
    
    bc.transk = zks(:,ik); bc.transa = as(:,ik); bc.transb = bs(:,ik);
    [mats,erra] = rla.get_fw_mats(kh(ik),src_info,bc,sensor_info,opts);
