@@ -22,18 +22,20 @@ CLINK = -lgfortran -lm -ldl
 LIBS = -lm
 
 # flags for MATLAB MEX compilation..
-MFLAGS=-compatibleArrayDims -lgfortran -DMWF77_UNDERSCORE1 -lm -ldl   
-MWFLAGS=-c99complex -i8 
+MFLAGS=-compatibleArrayDims -DMWF77_UNDERSCORE1   
+MWFLAGS=-c99complex 
+MOMPFLAGS = -D_OPENMP
 
 # location of MATLAB's mex compiler
 MEX=mex
 
 # For experts, location of Mwrap executable
 MWRAP=../../../mwrap/mwrap
-
+MEXLIBS=-lm -lstdc++ -ldl -lgfortran
 
 # For your OS, override the above by placing make variables in make.inc
 -include make.inc
+
 
 
 # objects to compile
@@ -89,11 +91,10 @@ GATEWAY3 = $(MWRAPFILE3)
 GATEWAY4 = $(MWRAPFILE4)
 
 matlab:	$(STATICLIB) src/matlab/$(GATEWAY).c src/matlab/$(GATEWAY2).c src/matlab/$(GATEWAY3).c src/matlab/$(GATEWAY4).c
-	$(MEX) -v src/matlab/$(GATEWAY).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/kern_mats $(MEX_LIBS);
-	$(MEX) -v src/matlab/$(GATEWAY2).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/helm_kernels $(MEXLIBS);
-	$(MEX) -v src/matlab/$(GATEWAY3).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/lap_kernels $(MEXLIBS);
-	$(MEX) -v src/matlab/$(GATEWAY4).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/curve_resampler $(MEXLIBS);
-
+	$(MEX) src/matlab/$(GATEWAY).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/kern_mats $(MEXLIBS)
+	$(MEX) src/matlab/$(GATEWAY2).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/helm_kernels $(MEXLIBS)
+	$(MEX) src/matlab/$(GATEWAY3).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/lap_kernels $(MEXLIBS)
+	$(MEX) src/matlab/$(GATEWAY4).c lib-static/$(STATICLIB) $(MFLAGS) -output src/matlab/curve_resampler $(MEXLIBS)
 
 mex:  $(STATICLIB)
 	cd src; cd matlab;  $(MWRAP) $(MWFLAGS) -list -mex $(GATEWAY) -mb $(MWRAPFILE).mw;\
