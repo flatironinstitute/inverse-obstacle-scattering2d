@@ -1005,12 +1005,6 @@ mxWrapReturnDef  (mxWrapReturn_int,   int)
 mxWrapGetArrayDef_single(mxWrapGetArray_single_int, int)
 mxWrapCopyDef_single    (mxWrapCopy_single_int,     int)
 mxWrapReturnDef_single  (mxWrapReturn_single_int,   int)
-mxWrapGetArrayDef(mxWrapGetArray_int64_t, int64_t)
-mxWrapCopyDef    (mxWrapCopy_int64_t,     int64_t)
-mxWrapReturnDef  (mxWrapReturn_int64_t,   int64_t)
-mxWrapGetArrayDef_single(mxWrapGetArray_single_int64_t, int64_t)
-mxWrapCopyDef_single    (mxWrapCopy_single_int64_t,     int64_t)
-mxWrapReturnDef_single  (mxWrapReturn_single_int64_t,   int64_t)
 mxWrapGetArrayDef(mxWrapGetArray_long, long)
 mxWrapCopyDef    (mxWrapCopy_long,     long)
 mxWrapReturnDef  (mxWrapReturn_long,   long)
@@ -1096,28 +1090,28 @@ extern "C" { /* Prevent C++ name mangling */
 #define MWF77_RETURN int
 #endif
 
-MWF77_RETURN MWF77_helm_c_p(int64_t*, double*, int64_t*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_helm_c_gn(int64_t*, double*, int64_t*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_helm_c_g(int64_t*, double*, int64_t*, double*, dcomplex*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_helm_d_p(int64_t*, double*, int64_t*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_helm_d_gn(int64_t*, double*, int64_t*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_helm_c_p(int*, double*, int*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_helm_c_gn(int*, double*, int*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_helm_c_g(int*, double*, int*, double*, dcomplex*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_helm_d_p(int*, double*, int*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_helm_d_gn(int*, double*, int*, double*, dcomplex*, dcomplex*);
 
 #ifdef __cplusplus
 } /* end extern C */
 #endif
 
 /* ---- helm_kernels.mw: 15 ----
- * helm_c_p(int64_t[1] n, double[2, n] src0, int64_t[1] m, double[2, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
+ * helm_c_p(int[1] n, double[2, n] src0, int[1] m, double[2, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
  */
-static const char* stubids1_ = "helm_c_p(i int64_t[x], i double[xx], i int64_t[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids1_ = "helm_c_p(i int[x], i double[xx], i int[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub1(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* src0       */
-    int64_t*    in2_ =0; /* m          */
+    int*        in2_ =0; /* m          */
     double*     in3_ =0; /* targ0      */
     dcomplex*   in4_ =0; /* zk         */
     dcomplex*   in5_ =0; /* u          */
@@ -1172,7 +1166,7 @@ void mexStub1(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1189,7 +1183,7 @@ void mexStub1(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1239,17 +1233,17 @@ mw_err_label:
 }
 
 /* ---- helm_kernels.mw: 33 ----
- * helm_c_gn(int64_t[1] n, double[2, n] src0, int64_t[1] m, double[4, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
+ * helm_c_gn(int[1] n, double[2, n] src0, int[1] m, double[4, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
  */
-static const char* stubids2_ = "helm_c_gn(i int64_t[x], i double[xx], i int64_t[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids2_ = "helm_c_gn(i int[x], i double[xx], i int[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub2(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* src0       */
-    int64_t*    in2_ =0; /* m          */
+    int*        in2_ =0; /* m          */
     double*     in3_ =0; /* targ0      */
     dcomplex*   in4_ =0; /* zk         */
     dcomplex*   in5_ =0; /* u          */
@@ -1304,7 +1298,7 @@ void mexStub2(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1321,7 +1315,7 @@ void mexStub2(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1371,17 +1365,17 @@ mw_err_label:
 }
 
 /* ---- helm_kernels.mw: 55 ----
- * helm_c_g(int64_t[1] n, double[2, n] src0, int64_t[1] m, double[2, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] ux, inout dcomplex[m, n] uy);
+ * helm_c_g(int[1] n, double[2, n] src0, int[1] m, double[2, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] ux, inout dcomplex[m, n] uy);
  */
-static const char* stubids3_ = "helm_c_g(i int64_t[x], i double[xx], i int64_t[x], i double[xx], i dcomplex[x], io dcomplex[xx], io dcomplex[xx])";
+static const char* stubids3_ = "helm_c_g(i int[x], i double[xx], i int[x], i double[xx], i dcomplex[x], io dcomplex[xx], io dcomplex[xx])";
 
 void mexStub3(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* src0       */
-    int64_t*    in2_ =0; /* m          */
+    int*        in2_ =0; /* m          */
     double*     in3_ =0; /* targ0      */
     dcomplex*   in4_ =0; /* zk         */
     dcomplex*   in5_ =0; /* ux         */
@@ -1447,7 +1441,7 @@ void mexStub3(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1464,7 +1458,7 @@ void mexStub3(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1526,17 +1520,17 @@ mw_err_label:
 }
 
 /* ---- helm_kernels.mw: 71 ----
- * helm_d_p(int64_t[1] n, double[4, n] src0, int64_t[1] m, double[2, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
+ * helm_d_p(int[1] n, double[4, n] src0, int[1] m, double[2, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
  */
-static const char* stubids4_ = "helm_d_p(i int64_t[x], i double[xx], i int64_t[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids4_ = "helm_d_p(i int[x], i double[xx], i int[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub4(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* src0       */
-    int64_t*    in2_ =0; /* m          */
+    int*        in2_ =0; /* m          */
     double*     in3_ =0; /* targ0      */
     dcomplex*   in4_ =0; /* zk         */
     dcomplex*   in5_ =0; /* u          */
@@ -1591,7 +1585,7 @@ void mexStub4(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1608,7 +1602,7 @@ void mexStub4(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1658,17 +1652,17 @@ mw_err_label:
 }
 
 /* ---- helm_kernels.mw: 90 ----
- * helm_d_gn(int64_t[1] n, double[4, n] src0, int64_t[1] m, double[4, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
+ * helm_d_gn(int[1] n, double[4, n] src0, int[1] m, double[4, m] targ0, dcomplex[1] zk, inout dcomplex[m, n] u);
  */
-static const char* stubids5_ = "helm_d_gn(i int64_t[x], i double[xx], i int64_t[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids5_ = "helm_d_gn(i int[x], i double[xx], i int[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub5(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* src0       */
-    int64_t*    in2_ =0; /* m          */
+    int*        in2_ =0; /* m          */
     double*     in3_ =0; /* targ0      */
     dcomplex*   in4_ =0; /* zk         */
     dcomplex*   in5_ =0; /* u          */
@@ -1723,7 +1717,7 @@ void mexStub5(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1740,7 +1734,7 @@ void mexStub5(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else

@@ -12,7 +12,7 @@ function [ux,uy] = helm_c_g(zk,src,targ)
 
   ux = complex(zeros(m,n));
   uy = complex(zeros(m,n));
-  mex_id_ = 'helm_c_g(i int64_t[x], i double[xx], i int64_t[x], i double[xx], i dcomplex[x], io dcomplex[xx], io dcomplex[xx])';
+  mex_id_ = 'helm_c_g(i int[x], i double[xx], i int[x], i double[xx], i dcomplex[x], io dcomplex[xx], io dcomplex[xx])';
 [ux, uy] = helm_kernels(mex_id_, n, src0, m, targ0, zk, ux, uy, 1, 2, n, 1, 2, m, 1, m, n, m, n);
 end
 %

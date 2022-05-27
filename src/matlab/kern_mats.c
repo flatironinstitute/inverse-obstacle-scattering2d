@@ -1005,12 +1005,6 @@ mxWrapReturnDef  (mxWrapReturn_int,   int)
 mxWrapGetArrayDef_single(mxWrapGetArray_single_int, int)
 mxWrapCopyDef_single    (mxWrapCopy_single_int,     int)
 mxWrapReturnDef_single  (mxWrapReturn_single_int,   int)
-mxWrapGetArrayDef(mxWrapGetArray_int64_t, int64_t)
-mxWrapCopyDef    (mxWrapCopy_int64_t,     int64_t)
-mxWrapReturnDef  (mxWrapReturn_int64_t,   int64_t)
-mxWrapGetArrayDef_single(mxWrapGetArray_single_int64_t, int64_t)
-mxWrapCopyDef_single    (mxWrapCopy_single_int64_t,     int64_t)
-mxWrapReturnDef_single  (mxWrapReturn_single_int64_t,   int64_t)
 mxWrapGetArrayDef(mxWrapGetArray_long, long)
 mxWrapCopyDef    (mxWrapCopy_long,     long)
 mxWrapReturnDef  (mxWrapReturn_long,   long)
@@ -1105,30 +1099,30 @@ extern "C" { /* Prevent C++ name mangling */
 #define MWF77_RETURN int
 #endif
 
-MWF77_RETURN MWF77_slp_mat(int64_t*, int64_t*, double*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_dlp_ext_mat(int64_t*, int64_t*, double*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_comb_ext_mat(int64_t*, int64_t*, double*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_sprime_ext_mat(int64_t*, int64_t*, double*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_ddiff_neu_mat(int64_t*, int64_t*, double*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_ddiff0_neu_mat(int64_t*, int64_t*, double*, double*, dcomplex*, dcomplex*);
-MWF77_RETURN MWF77_lap_dlp_mat(int64_t*, int64_t*, double*, double*, dcomplex*);
-MWF77_RETURN MWF77_trans_mat(int64_t*, int64_t*, double*, double*, dcomplex*, dcomplex*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_slp_mat(int*, int*, double*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_dlp_ext_mat(int*, int*, double*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_comb_ext_mat(int*, int*, double*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_sprime_ext_mat(int*, int*, double*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_ddiff_neu_mat(int*, int*, double*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_ddiff0_neu_mat(int*, int*, double*, double*, dcomplex*, dcomplex*);
+MWF77_RETURN MWF77_lap_dlp_mat(int*, int*, double*, double*, dcomplex*);
+MWF77_RETURN MWF77_trans_mat(int*, int*, double*, double*, dcomplex*, dcomplex*, dcomplex*, dcomplex*);
 
 #ifdef __cplusplus
 } /* end extern C */
 #endif
 
 /* ---- kern_mats.mw: 33 ----
- * slp_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zk, inout dcomplex[n, n] xmat);
+ * slp_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zk, inout dcomplex[n, n] xmat);
  */
-static const char* stubids1_ = "slp_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids1_ = "slp_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub1(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* zk         */
@@ -1180,13 +1174,13 @@ void mexStub1(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1247,16 +1241,16 @@ mw_err_label:
 }
 
 /* ---- kern_mats.mw: 64 ----
- * dlp_ext_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zk, inout dcomplex[n, n] xmat);
+ * dlp_ext_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zk, inout dcomplex[n, n] xmat);
  */
-static const char* stubids2_ = "dlp_ext_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids2_ = "dlp_ext_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub2(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* zk         */
@@ -1308,13 +1302,13 @@ void mexStub2(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1375,16 +1369,16 @@ mw_err_label:
 }
 
 /* ---- kern_mats.mw: 99 ----
- * comb_ext_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[3] zpars, inout dcomplex[n, n] xmat);
+ * comb_ext_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[3] zpars, inout dcomplex[n, n] xmat);
  */
-static const char* stubids3_ = "comb_ext_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids3_ = "comb_ext_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub3(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* zpars      */
@@ -1436,13 +1430,13 @@ void mexStub3(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1503,16 +1497,16 @@ mw_err_label:
 }
 
 /* ---- kern_mats.mw: 134 ----
- * sprime_ext_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zk, inout dcomplex[n, n] xmat);
+ * sprime_ext_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zk, inout dcomplex[n, n] xmat);
  */
-static const char* stubids4_ = "sprime_ext_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids4_ = "sprime_ext_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub4(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* zk         */
@@ -1564,13 +1558,13 @@ void mexStub4(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1631,16 +1625,16 @@ mw_err_label:
 }
 
 /* ---- kern_mats.mw: 172 ----
- * ddiff_neu_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[2] zpars, inout dcomplex[n, n] xmat);
+ * ddiff_neu_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[2] zpars, inout dcomplex[n, n] xmat);
  */
-static const char* stubids5_ = "ddiff_neu_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids5_ = "ddiff_neu_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub5(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* zpars      */
@@ -1692,13 +1686,13 @@ void mexStub5(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1759,16 +1753,16 @@ mw_err_label:
 }
 
 /* ---- kern_mats.mw: 210 ----
- * ddiff0_neu_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zpars, inout dcomplex[n, n] xmat);
+ * ddiff0_neu_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[1] zpars, inout dcomplex[n, n] xmat);
  */
-static const char* stubids6_ = "ddiff0_neu_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids6_ = "ddiff0_neu_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub6(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* zpars      */
@@ -1820,13 +1814,13 @@ void mexStub6(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1887,16 +1881,16 @@ mw_err_label:
 }
 
 /* ---- kern_mats.mw: 244 ----
- * lap_dlp_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, inout dcomplex[n, n] xmat);
+ * lap_dlp_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, inout dcomplex[n, n] xmat);
  */
-static const char* stubids7_ = "lap_dlp_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], io dcomplex[xx])";
+static const char* stubids7_ = "lap_dlp_mat(i int[x], i int[x], i double[x], i double[xx], io dcomplex[xx])";
 
 void mexStub7(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* xmat       */
@@ -1941,13 +1935,13 @@ void mexStub7(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1998,16 +1992,16 @@ mw_err_label:
 }
 
 /* ---- kern_mats.mw: 291 ----
- * trans_mat(int64_t[1] n, int64_t[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[2] zks, dcomplex[2] a, dcomplex[2] b, inout dcomplex[nsys, nsys] xmat);
+ * trans_mat(int[1] n, int[1] norder, double[1] h, double[6, n] srcinfo, dcomplex[2] zks, dcomplex[2] a, dcomplex[2] b, inout dcomplex[nsys, nsys] xmat);
  */
-static const char* stubids8_ = "trans_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], i dcomplex[x], i dcomplex[x], io dcomplex[xx])";
+static const char* stubids8_ = "trans_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], i dcomplex[x], i dcomplex[x], io dcomplex[xx])";
 
 void mexStub8(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
-    int64_t*    in1_ =0; /* norder     */
+    int*        in0_ =0; /* n          */
+    int*        in1_ =0; /* norder     */
     double*     in2_ =0; /* h          */
     double*     in3_ =0; /* srcinfo    */
     dcomplex*   in4_ =0; /* zks        */
@@ -2073,13 +2067,13 @@ void mexStub8(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else

@@ -48,7 +48,7 @@ function [varargout] = resample_curve_pts(xys,nb,eps,nuse)
   lsave = 0;
   lused = 0;
   ierm = 0;
-  mex_id_ = 'simple_curve_resampler_mem(i int64_t[x], i double[xx], i int64_t[x], i double[x], i int64_t[x], io int64_t[x], io int64_t[x], io int64_t[x], io int64_t[x], io int64_t[x])';
+  mex_id_ = 'simple_curve_resampler_mem(i int[x], i double[xx], i int[x], i double[x], i int[x], io int[x], io int[x], io int[x], io int[x], io int[x])';
 [nlarge, nout, lsave, lused, ierm] = curve_resampler(mex_id_, n, xys, nb, epsuse, nmax, nlarge, nout, lsave, lused, ierm, 1, 2, n, 1, 1, 1, 1, 1, 1, 1, 1);
 
   if(ierm == 4)
@@ -67,7 +67,7 @@ function [varargout] = resample_curve_pts(xys,nb,eps,nuse)
   sinfo = zeros(6,nout);
   hout = 0.0;
   rltot = 0.0;
-  mex_id_ = 'simple_curve_resampler_guru(i int64_t[x], i double[xx], i int64_t[x], i int64_t[x], i int64_t[x], i int64_t[x], i int64_t[x], io double[xx], io double[x], io double[x], io double[x], io double[x], io int64_t[x])';
+  mex_id_ = 'simple_curve_resampler_guru(i int[x], i double[xx], i int[x], i int[x], i int[x], i int[x], i int[x], io double[xx], io double[x], io double[x], io double[x], io double[x], io int[x])';
 [sinfo, hout, rltot, wsave, tts, ierm] = curve_resampler(mex_id_, n, xys, nb, nlarge, lsave, lused, nout, sinfo, hout, rltot, wsave, tts, ierm, 1, 2, n, 1, 1, 1, 1, 1, 6, nout, 1, 1, lsave, nnn, 1);
   
   varargout{1} = rltot;

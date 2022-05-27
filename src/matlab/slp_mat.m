@@ -25,7 +25,7 @@ function [xmat] = slp_mat(zk,norder,h,srcinfo)
   [m,n] = size(srcinfo);
   assert(m==6,'srcinfo must be of shape (6,n)');
   xmat = complex(zeros(n),0);
-  mex_id_ = 'slp_mat(i int64_t[x], i int64_t[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])';
+  mex_id_ = 'slp_mat(i int[x], i int[x], i double[x], i double[xx], i dcomplex[x], io dcomplex[xx])';
 [xmat] = kern_mats(mex_id_, n, norder, h, srcinfo, zk, xmat, 1, 1, 1, 6, n, 1, n, n);
 end
 %

@@ -1,5 +1,8 @@
-function [src_info] = larrycup(a,b,n)
-    nhalf = ceil(n/2);
+function [src_info] = larrycup(a,b,n,m)
+    if(nargin == 3)
+        m = n
+    end
+    nhalf = ceil(m/2);
     s = ((1:nhalf)-0.5)/nhalf * pi;  % note half-offset, needed for easy reflection abt z
     r = 1 - a*erf((s-pi/2)/a);  % radius: starts at 1+a, ends at 1-a
     c = a; %*(1-b/pi);  % is theta rounding scale
@@ -8,7 +11,7 @@ function [src_info] = larrycup(a,b,n)
     rho = r.*sin(th); z = r.*cos(th);  % theta down from z axis as in 3D cyl coords
     z = z*1.2;  % vert stretch! makes ellipse cavity
     Z = [rho -rho(end:-1:1)] + 1i*[z z(end:-1:1)]; % complex coords of full curve
-    zhat = fft(Z(:))/n;
+    zhat = fft(Z(:))/m;
     t1 = (0:(n-1))/n;
     h = 1.0/n;
     xy = fourierZ(zhat,t1);

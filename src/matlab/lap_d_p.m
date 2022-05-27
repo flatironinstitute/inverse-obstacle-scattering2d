@@ -10,6 +10,6 @@ function [u] = lap_d_p(src,targ)
   targ0 = targ(1:2,:);
 
   u = complex(zeros(m,n));
-  mex_id_ = 'lap_d_p(i int64_t[x], i double[xx], i int64_t[x], i double[xx], io dcomplex[xx])';
+  mex_id_ = 'lap_d_p(i int[x], i double[xx], i int[x], i double[xx], io dcomplex[xx])';
 [u] = lap_kernels(mex_id_, n, src0, m, targ0, u, 1, 4, n, 1, 2, m, m, n);
 end

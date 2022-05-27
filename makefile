@@ -99,16 +99,16 @@ matlab:	$(STATICLIB) src/matlab/$(GATEWAY).c src/matlab/$(GATEWAY2).c src/matlab
 mex:  $(STATICLIB)
 	cd src; cd matlab;  $(MWRAP) $(MWFLAGS) -list -mex $(GATEWAY) -mb $(MWRAPFILE).mw;\
 	$(MWRAP) $(MWFLAGS) -mex $(GATEWAY) -c $(GATEWAY).c $(MWRAPFILE).mw;\
-	$(MEX) -v $(GATEWAY).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE) $(MEX_LIBS); \
+	$(MEX) -v $(GATEWAY).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE) $(MEXLIBS); \
 	$(MWRAP) $(MWFLAGS) -list -mex $(GATEWAY2) -mb $(MWRAPFILE2).mw;\
 	$(MWRAP) $(MWFLAGS) -mex $(GATEWAY2) -c $(GATEWAY2).c $(MWRAPFILE2).mw;\
-	$(MEX) -v $(GATEWAY2).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE2) $(MEX_LIBS);\
+	$(MEX) -v $(GATEWAY2).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE2) $(MEXLIBS);\
 	$(MWRAP) $(MWFLAGS) -list -mex $(GATEWAY3) -mb $(MWRAPFILE3).mw;\
 	$(MWRAP) $(MWFLAGS) -mex $(GATEWAY3) -c $(GATEWAY3).c $(MWRAPFILE3).mw;\
-	$(MEX) -v $(GATEWAY3).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE3) $(MEX_LIBS); \
+	$(MEX) -v $(GATEWAY3).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE3) $(MEXLIBS); \
 	$(MWRAP) $(MWFLAGS) -list -mex $(GATEWAY4) -mb $(MWRAPFILE4).mw;\
 	$(MWRAP) $(MWFLAGS) -mex $(GATEWAY4) -c $(GATEWAY4).c $(MWRAPFILE4).mw;\
-	$(MEX) -v $(GATEWAY4).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE4) $(MEX_LIBS);
+	$(MEX) -v $(GATEWAY4).c ../../lib-static/$(STATICLIB) $(MFLAGS) -output $(MWRAPFILE4) $(MEXLIBS);
 
 clean: objclean
 	rm -f examples/ext_dir_solver examples/trans_solver

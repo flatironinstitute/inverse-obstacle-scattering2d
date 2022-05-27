@@ -11,7 +11,7 @@ function [u] = lap_c_gn(src,targ)
   targ0 = targ(1:4,:);
 
   u = complex(zeros(m,n));
-  mex_id_ = 'lap_c_gn(i int64_t[x], i double[xx], i int64_t[x], i double[xx], io dcomplex[xx])';
+  mex_id_ = 'lap_c_gn(i int[x], i double[xx], i int[x], i double[xx], io dcomplex[xx])';
 [u] = lap_kernels(mex_id_, n, src0, m, targ0, u, 1, 2, n, 1, 4, m, m, n);
 end
 %

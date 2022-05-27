@@ -1005,12 +1005,6 @@ mxWrapReturnDef  (mxWrapReturn_int,   int)
 mxWrapGetArrayDef_single(mxWrapGetArray_single_int, int)
 mxWrapCopyDef_single    (mxWrapCopy_single_int,     int)
 mxWrapReturnDef_single  (mxWrapReturn_single_int,   int)
-mxWrapGetArrayDef(mxWrapGetArray_int64_t, int64_t)
-mxWrapCopyDef    (mxWrapCopy_int64_t,     int64_t)
-mxWrapReturnDef  (mxWrapReturn_int64_t,   int64_t)
-mxWrapGetArrayDef_single(mxWrapGetArray_single_int64_t, int64_t)
-mxWrapCopyDef_single    (mxWrapCopy_single_int64_t,     int64_t)
-mxWrapReturnDef_single  (mxWrapReturn_single_int64_t,   int64_t)
 mxWrapGetArrayDef(mxWrapGetArray_long, long)
 mxWrapCopyDef    (mxWrapCopy_long,     long)
 mxWrapReturnDef  (mxWrapReturn_long,   long)
@@ -1093,38 +1087,38 @@ extern "C" { /* Prevent C++ name mangling */
 #define MWF77_RETURN int
 #endif
 
-MWF77_RETURN MWF77_curve_resampler_guru(int64_t*, int64_t*, int64_t*, dcomplex*, double*, int64_t*, double*, double*, double*, double*, double*, double*, int64_t*, int64_t*);
-MWF77_RETURN MWF77_simple_curve_resampler_mem(int64_t*, double*, int64_t*, double*, int64_t*, int64_t*, int64_t*, int64_t*, int64_t*, int64_t*);
-MWF77_RETURN MWF77_simple_curve_resampler_guru(int64_t*, double*, int64_t*, int64_t*, int64_t*, int64_t*, int64_t*, double*, double*, double*, double*, double*, int64_t*);
-MWF77_RETURN MWF77_eval_curve_multi(int64_t*, double*, int64_t*, double*, double*);
+MWF77_RETURN MWF77_curve_resampler_guru(int*, int*, int*, dcomplex*, double*, int*, double*, double*, double*, double*, double*, double*, int*, int*);
+MWF77_RETURN MWF77_simple_curve_resampler_mem(int*, double*, int*, double*, int*, int*, int*, int*, int*, int*);
+MWF77_RETURN MWF77_simple_curve_resampler_guru(int*, double*, int*, int*, int*, int*, int*, double*, double*, double*, double*, double*, int*);
+MWF77_RETURN MWF77_eval_curve_multi(int*, double*, int*, double*, double*);
 
 #ifdef __cplusplus
 } /* end extern C */
 #endif
 
 /* ---- curve_resampler.mw: 110 ----
- * curve_resampler_guru(inout int64_t[1] ier, int64_t[1] n, int64_t[1] nhuse, dcomplex[npar1] par1, double[1] rl, int64_t[1] nuse, double[1] epsuse, inout double[nn] tts, inout double[4, nuse] sinfo, inout double[1] hout, inout double[1] rltot, inout double[lw] work, int64_t[1] lw, inout int64_t[1] lsave);
+ * curve_resampler_guru(inout int[1] ier, int[1] n, int[1] nhuse, dcomplex[npar1] par1, double[1] rl, int[1] nuse, double[1] epsuse, inout double[nn] tts, inout double[4, nuse] sinfo, inout double[1] hout, inout double[1] rltot, inout double[lw] work, int[1] lw, inout int[1] lsave);
  */
-static const char* stubids1_ = "curve_resampler_guru(io int64_t[x], i int64_t[x], i int64_t[x], i dcomplex[x], i double[x], i int64_t[x], i double[x], io double[x], io double[xx], io double[x], io double[x], io double[x], i int64_t[x], io int64_t[x])";
+static const char* stubids1_ = "curve_resampler_guru(io int[x], i int[x], i int[x], i dcomplex[x], i double[x], i int[x], i double[x], io double[x], io double[xx], io double[x], io double[x], io double[x], i int[x], io int[x])";
 
 void mexStub1(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* ier        */
-    int64_t*    in1_ =0; /* n          */
-    int64_t*    in2_ =0; /* nhuse      */
+    int*        in0_ =0; /* ier        */
+    int*        in1_ =0; /* n          */
+    int*        in2_ =0; /* nhuse      */
     dcomplex*   in3_ =0; /* par1       */
     double*     in4_ =0; /* rl         */
-    int64_t*    in5_ =0; /* nuse       */
+    int*        in5_ =0; /* nuse       */
     double*     in6_ =0; /* epsuse     */
     double*     in7_ =0; /* tts        */
     double*     in8_ =0; /* sinfo      */
     double*     in9_ =0; /* hout       */
     double*     in10_ =0; /* rltot      */
     double*     in11_ =0; /* work       */
-    int64_t*    in12_ =0; /* lw         */
-    int64_t*    in13_ =0; /* lsave      */
+    int*        in12_ =0; /* lw         */
+    int*        in13_ =0; /* lsave      */
     mwSize      dim14_;   /* 1          */
     mwSize      dim15_;   /* 1          */
     mwSize      dim16_;   /* 1          */
@@ -1216,19 +1210,19 @@ void mexStub1(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in0_ = NULL;
     if (mxGetM(prhs[1])*mxGetN(prhs[1]) != 0) {
-        in1_ = mxWrapGetArray_int64_t(prhs[1], &mw_err_txt_);
+        in1_ = mxWrapGetArray_int(prhs[1], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1254,7 +1248,7 @@ void mexStub1(int nlhs, mxArray* plhs[],
     } else
         in4_ = NULL;
     if (mxGetM(prhs[5])*mxGetN(prhs[5]) != 0) {
-        in5_ = mxWrapGetArray_int64_t(prhs[5], &mw_err_txt_);
+        in5_ = mxWrapGetArray_int(prhs[5], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1301,13 +1295,13 @@ void mexStub1(int nlhs, mxArray* plhs[],
     } else
         in11_ = NULL;
     if (mxGetM(prhs[12])*mxGetN(prhs[12]) != 0) {
-        in12_ = mxWrapGetArray_int64_t(prhs[12], &mw_err_txt_);
+        in12_ = mxWrapGetArray_int(prhs[12], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in12_ = NULL;
     if (mxGetM(prhs[13])*mxGetN(prhs[13]) != 0) {
-        in13_ = mxWrapGetArray_int64_t(prhs[13], &mw_err_txt_);
+        in13_ = mxWrapGetArray_int(prhs[13], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1316,7 +1310,7 @@ void mexStub1(int nlhs, mxArray* plhs[],
         mexprofrecord_[1]++;
     MWF77_curve_resampler_guru(in0_, in1_, in2_, in3_, in4_, in5_, in6_, in7_, in8_, in9_, in10_, in11_, in12_, in13_);
     plhs[0] = mxCreateDoubleMatrix(dim14_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[0], in0_, dim14_);
+    mxWrapCopy_int(plhs[0], in0_, dim14_);
     plhs[1] = mxCreateDoubleMatrix(dim21_, 1, mxREAL);
     mxWrapCopy_double(plhs[1], in7_, dim21_);
     plhs[2] = mxCreateDoubleMatrix(dim22_, dim23_, mxREAL);
@@ -1328,7 +1322,7 @@ void mexStub1(int nlhs, mxArray* plhs[],
     plhs[5] = mxCreateDoubleMatrix(dim26_, 1, mxREAL);
     mxWrapCopy_double(plhs[5], in11_, dim26_);
     plhs[6] = mxCreateDoubleMatrix(dim28_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[6], in13_, dim28_);
+    mxWrapCopy_int(plhs[6], in13_, dim28_);
 
 mw_err_label:
     if (in0_)  mxFree(in0_);
@@ -1348,24 +1342,24 @@ mw_err_label:
 }
 
 /* ---- curve_resampler.mw: 190 ----
- * simple_curve_resampler_mem(int64_t[1] n, double[2, n] xys, int64_t[1] nb, double[1] epsuse, int64_t[1] nmax, inout int64_t[1] nlarge, inout int64_t[1] nout, inout int64_t[1] lsave, inout int64_t[1] lused, inout int64_t[1] ierm);
+ * simple_curve_resampler_mem(int[1] n, double[2, n] xys, int[1] nb, double[1] epsuse, int[1] nmax, inout int[1] nlarge, inout int[1] nout, inout int[1] lsave, inout int[1] lused, inout int[1] ierm);
  */
-static const char* stubids2_ = "simple_curve_resampler_mem(i int64_t[x], i double[xx], i int64_t[x], i double[x], i int64_t[x], io int64_t[x], io int64_t[x], io int64_t[x], io int64_t[x], io int64_t[x])";
+static const char* stubids2_ = "simple_curve_resampler_mem(i int[x], i double[xx], i int[x], i double[x], i int[x], io int[x], io int[x], io int[x], io int[x], io int[x])";
 
 void mexStub2(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* xys        */
-    int64_t*    in2_ =0; /* nb         */
+    int*        in2_ =0; /* nb         */
     double*     in3_ =0; /* epsuse     */
-    int64_t*    in4_ =0; /* nmax       */
-    int64_t*    in5_ =0; /* nlarge     */
-    int64_t*    in6_ =0; /* nout       */
-    int64_t*    in7_ =0; /* lsave      */
-    int64_t*    in8_ =0; /* lused      */
-    int64_t*    in9_ =0; /* ierm       */
+    int*        in4_ =0; /* nmax       */
+    int*        in5_ =0; /* nlarge     */
+    int*        in6_ =0; /* nout       */
+    int*        in7_ =0; /* lsave      */
+    int*        in8_ =0; /* lused      */
+    int*        in9_ =0; /* ierm       */
     mwSize      dim10_;   /* 1          */
     mwSize      dim11_;   /* 2          */
     mwSize      dim12_;   /* n          */
@@ -1433,7 +1427,7 @@ void mexStub2(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1450,7 +1444,7 @@ void mexStub2(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1467,37 +1461,37 @@ void mexStub2(int nlhs, mxArray* plhs[],
     } else
         in3_ = NULL;
     if (mxGetM(prhs[4])*mxGetN(prhs[4]) != 0) {
-        in4_ = mxWrapGetArray_int64_t(prhs[4], &mw_err_txt_);
+        in4_ = mxWrapGetArray_int(prhs[4], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in4_ = NULL;
     if (mxGetM(prhs[5])*mxGetN(prhs[5]) != 0) {
-        in5_ = mxWrapGetArray_int64_t(prhs[5], &mw_err_txt_);
+        in5_ = mxWrapGetArray_int(prhs[5], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in5_ = NULL;
     if (mxGetM(prhs[6])*mxGetN(prhs[6]) != 0) {
-        in6_ = mxWrapGetArray_int64_t(prhs[6], &mw_err_txt_);
+        in6_ = mxWrapGetArray_int(prhs[6], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in6_ = NULL;
     if (mxGetM(prhs[7])*mxGetN(prhs[7]) != 0) {
-        in7_ = mxWrapGetArray_int64_t(prhs[7], &mw_err_txt_);
+        in7_ = mxWrapGetArray_int(prhs[7], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in7_ = NULL;
     if (mxGetM(prhs[8])*mxGetN(prhs[8]) != 0) {
-        in8_ = mxWrapGetArray_int64_t(prhs[8], &mw_err_txt_);
+        in8_ = mxWrapGetArray_int(prhs[8], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in8_ = NULL;
     if (mxGetM(prhs[9])*mxGetN(prhs[9]) != 0) {
-        in9_ = mxWrapGetArray_int64_t(prhs[9], &mw_err_txt_);
+        in9_ = mxWrapGetArray_int(prhs[9], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1506,15 +1500,15 @@ void mexStub2(int nlhs, mxArray* plhs[],
         mexprofrecord_[2]++;
     MWF77_simple_curve_resampler_mem(in0_, in1_, in2_, in3_, in4_, in5_, in6_, in7_, in8_, in9_);
     plhs[0] = mxCreateDoubleMatrix(dim16_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[0], in5_, dim16_);
+    mxWrapCopy_int(plhs[0], in5_, dim16_);
     plhs[1] = mxCreateDoubleMatrix(dim17_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[1], in6_, dim17_);
+    mxWrapCopy_int(plhs[1], in6_, dim17_);
     plhs[2] = mxCreateDoubleMatrix(dim18_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[2], in7_, dim18_);
+    mxWrapCopy_int(plhs[2], in7_, dim18_);
     plhs[3] = mxCreateDoubleMatrix(dim19_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[3], in8_, dim19_);
+    mxWrapCopy_int(plhs[3], in8_, dim19_);
     plhs[4] = mxCreateDoubleMatrix(dim20_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[4], in9_, dim20_);
+    mxWrapCopy_int(plhs[4], in9_, dim20_);
 
 mw_err_label:
     if (in0_)  mxFree(in0_);
@@ -1530,27 +1524,27 @@ mw_err_label:
 }
 
 /* ---- curve_resampler.mw: 208 ----
- * simple_curve_resampler_guru(int64_t[1] n, double[2, n] xys, int64_t[1] nb, int64_t[1] nlarge, int64_t[1] lsave, int64_t[1] lused, int64_t[1] nout, inout double[6, nout] sinfo, inout double[1] hout, inout double[1] rltot, inout double[lsave] wsave, inout double[nnn] tts, inout int64_t[1] ierm);
+ * simple_curve_resampler_guru(int[1] n, double[2, n] xys, int[1] nb, int[1] nlarge, int[1] lsave, int[1] lused, int[1] nout, inout double[6, nout] sinfo, inout double[1] hout, inout double[1] rltot, inout double[lsave] wsave, inout double[nnn] tts, inout int[1] ierm);
  */
-static const char* stubids3_ = "simple_curve_resampler_guru(i int64_t[x], i double[xx], i int64_t[x], i int64_t[x], i int64_t[x], i int64_t[x], i int64_t[x], io double[xx], io double[x], io double[x], io double[x], io double[x], io int64_t[x])";
+static const char* stubids3_ = "simple_curve_resampler_guru(i int[x], i double[xx], i int[x], i int[x], i int[x], i int[x], i int[x], io double[xx], io double[x], io double[x], io double[x], io double[x], io int[x])";
 
 void mexStub3(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* xys        */
-    int64_t*    in2_ =0; /* nb         */
-    int64_t*    in3_ =0; /* nlarge     */
-    int64_t*    in4_ =0; /* lsave      */
-    int64_t*    in5_ =0; /* lused      */
-    int64_t*    in6_ =0; /* nout       */
+    int*        in2_ =0; /* nb         */
+    int*        in3_ =0; /* nlarge     */
+    int*        in4_ =0; /* lsave      */
+    int*        in5_ =0; /* lused      */
+    int*        in6_ =0; /* nout       */
     double*     in7_ =0; /* sinfo      */
     double*     in8_ =0; /* hout       */
     double*     in9_ =0; /* rltot      */
     double*     in10_ =0; /* wsave      */
     double*     in11_ =0; /* tts        */
-    int64_t*    in12_ =0; /* ierm       */
+    int*        in12_ =0; /* ierm       */
     mwSize      dim13_;   /* 1          */
     mwSize      dim14_;   /* 2          */
     mwSize      dim15_;   /* n          */
@@ -1640,7 +1634,7 @@ void mexStub3(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1657,31 +1651,31 @@ void mexStub3(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in2_ = NULL;
     if (mxGetM(prhs[3])*mxGetN(prhs[3]) != 0) {
-        in3_ = mxWrapGetArray_int64_t(prhs[3], &mw_err_txt_);
+        in3_ = mxWrapGetArray_int(prhs[3], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in3_ = NULL;
     if (mxGetM(prhs[4])*mxGetN(prhs[4]) != 0) {
-        in4_ = mxWrapGetArray_int64_t(prhs[4], &mw_err_txt_);
+        in4_ = mxWrapGetArray_int(prhs[4], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in4_ = NULL;
     if (mxGetM(prhs[5])*mxGetN(prhs[5]) != 0) {
-        in5_ = mxWrapGetArray_int64_t(prhs[5], &mw_err_txt_);
+        in5_ = mxWrapGetArray_int(prhs[5], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
         in5_ = NULL;
     if (mxGetM(prhs[6])*mxGetN(prhs[6]) != 0) {
-        in6_ = mxWrapGetArray_int64_t(prhs[6], &mw_err_txt_);
+        in6_ = mxWrapGetArray_int(prhs[6], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1717,7 +1711,7 @@ void mexStub3(int nlhs, mxArray* plhs[],
     } else
         in11_ = NULL;
     if (mxGetM(prhs[12])*mxGetN(prhs[12]) != 0) {
-        in12_ = mxWrapGetArray_int64_t(prhs[12], &mw_err_txt_);
+        in12_ = mxWrapGetArray_int(prhs[12], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1736,7 +1730,7 @@ void mexStub3(int nlhs, mxArray* plhs[],
     plhs[4] = mxCreateDoubleMatrix(dim26_, 1, mxREAL);
     mxWrapCopy_double(plhs[4], in11_, dim26_);
     plhs[5] = mxCreateDoubleMatrix(dim27_, 1, mxREAL);
-    mxWrapCopy_int64_t(plhs[5], in12_, dim27_);
+    mxWrapCopy_int(plhs[5], in12_, dim27_);
 
 mw_err_label:
     if (in0_)  mxFree(in0_);
@@ -1756,17 +1750,17 @@ mw_err_label:
 }
 
 /* ---- curve_resampler.mw: 247 ----
- * eval_curve_multi(int64_t[1] n, double[n] tsuse, int64_t[1] lsave, double[lsave] wsave, inout double[6, n] binfo);
+ * eval_curve_multi(int[1] n, double[n] tsuse, int[1] lsave, double[lsave] wsave, inout double[6, n] binfo);
  */
-static const char* stubids4_ = "eval_curve_multi(i int64_t[x], i double[x], i int64_t[x], i double[x], io double[xx])";
+static const char* stubids4_ = "eval_curve_multi(i int[x], i double[x], i int[x], i double[x], io double[xx])";
 
 void mexStub4(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
 {
     const char* mw_err_txt_ = 0;
-    int64_t*    in0_ =0; /* n          */
+    int*        in0_ =0; /* n          */
     double*     in1_ =0; /* tsuse      */
-    int64_t*    in2_ =0; /* lsave      */
+    int*        in2_ =0; /* lsave      */
     double*     in3_ =0; /* wsave      */
     double*     in4_ =0; /* binfo      */
     mwSize      dim5_;   /* 1          */
@@ -1806,7 +1800,7 @@ void mexStub4(int nlhs, mxArray* plhs[],
     }
 
     if (mxGetM(prhs[0])*mxGetN(prhs[0]) != 0) {
-        in0_ = mxWrapGetArray_int64_t(prhs[0], &mw_err_txt_);
+        in0_ = mxWrapGetArray_int(prhs[0], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -1823,7 +1817,7 @@ void mexStub4(int nlhs, mxArray* plhs[],
     } else
         in1_ = NULL;
     if (mxGetM(prhs[2])*mxGetN(prhs[2]) != 0) {
-        in2_ = mxWrapGetArray_int64_t(prhs[2], &mw_err_txt_);
+        in2_ = mxWrapGetArray_int(prhs[2], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
