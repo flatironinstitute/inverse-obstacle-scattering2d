@@ -11,6 +11,7 @@ penetrable objects.
 * For linux, run ``make install``
 * For Mac OSX, run ``cp make.inc.macosx make.inc`` followed by ``make
   matlab``
+* For Windows, follow install instructions to get MingW 6.3.0 and command line tools [here](https://fmm3d.readthedocs.io/en/latest/install.html), then run ``cp make.inc.mingw.windows make.inc`` followed by ``make matlab``
 
 This should generate the appropriate mex files in the ``matlab/``
 directory.
