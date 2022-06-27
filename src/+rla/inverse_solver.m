@@ -239,21 +239,21 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
             end
         end
         
-        
-        
         [deltas{iter},src_info_all{iter},mats_out,fields_all{iter},res_all(iter),ier(iter)] = ...
            rla.update_inverse_iterate(kh,src_use,mats,fields,u_meas,bc,optim_opts,opts_use);
         if(verbose)
             fprintf('iter number: %d \t optim_type: %s \t residue: %d \t ier: %d\n',iter,optim_opts_use.optim_type,res_all(iter),ier(iter));
         end
-        src_use = src_info_all{iter};
-        mats = mats_out;
-        fields = fields_all{iter};
         
         if(ier(iter) ~=0) 
             exit_criterion = -1;
             break;
         end
+        
+        
+        src_use = src_info_all{iter};
+        mats = mats_out;
+        fields = fields_all{iter};
         
         if(res_all(iter) <= eps_res)
             exit_criterion = 1;

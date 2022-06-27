@@ -131,6 +131,7 @@ function ipass = test_frechet_ders()
     % Test obstacle frechet derivative of impedance problem
     t = 0:2*pi/n:2*pi*(1.0-1.0/n);
     src_info.lambda = sin(2*t)';
+    src_info.lambda = (sin(2*t) + 0.1*1i*(1+cos(2*t))).';
     bc = [];
     bc.type = 'Impedance';
     bc.invtype = 'oi';
@@ -165,11 +166,10 @@ function ipass = test_frechet_ders()
         fprintf('failed Impedance test obstacle in frechet_ders test: %d\n',errs(2));
     end
     
-
-
-
     % Test impedance frechet derivative of impedance problem
 
+    hcoefs =  (0.1*rand(1,2*nh+1) + 0.1*1i*rand(1,2*nh+1))/sqrt(2);
+    
     uder = frechet_mats.impedance*hcoefs(:);
     errs = zeros(2,1);
     for ig=1:2
@@ -177,23 +177,20 @@ function ipass = test_frechet_ders()
         hcoefs_use = dh*hcoefs;
         hcoefs_use = hcoefs_use(:);
         src_out = src_info;
-        h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
-        src_out.lambda = src_info.lambda + h_upd';
+        h_upd = (cos(t.'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t.'*(1:nh))*hcoefs_use((nh+2):end)).';
+        src_out.lambda = src_info.lambda + h_upd.';
         [mats1,~] = rla.get_fw_mats(kh,src_out,bc,sensor_info,opts);
         fields1 = rla.compute_fields(kh,src_out,mats1,sensor_info,bc,opts);
 
-
-
         src_out2 = src_info;
-        src_out2.lambda = src_info.lambda - h_upd';
+        src_out2.lambda = src_info.lambda - h_upd.';
         [mats2,~] = rla.get_fw_mats(kh,src_out2,bc,sensor_info,opts);
         fields2 = rla.compute_fields(kh,src_out2,mats2,sensor_info,bc,opts);
 
         uder_est = (fields1.uscat_tgt(:) - fields2.uscat_tgt(:))/2/dh;
         errs(ig) = norm(uder-uder_est);
     end
-
-    if(errs(2)>1e-4) 
+    if(errs(2)>1e-4)
         ipass = 0;
         fprintf('failed Impedance test impedance in frechet_ders test: %d\n',errs(2));
     end

@@ -114,7 +114,7 @@ function fields = compute_fields(kh,src_info,mats,sensor_info,bc,opts)
    end
 
    if(strcmpi(bc.type,'i') || strcmpi(bc.type,'Impedance'))
-     lambda_rep = repmat(src_info.lambda,1,n_dir);
+     lambda_rep = repmat(src_info.lambda(:),1,n_dir);
      bd_data = -(fields.dudninc + 1i*kh*lambda_rep.*fields.uinc);
    end
 

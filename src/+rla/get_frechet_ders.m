@@ -118,7 +118,7 @@ function [frechet_mats] = get_frechet_ders(kh,mats,src_info,sensor_info,fields,b
          end  
          
          if(strcmpi(bc.type,'i') || strcmpi(bc.type,'Impedance'))
-             delta_lambda_rep = repmat(h_upd',1,n_dir);
+             delta_lambda_rep = repmat(h_upd.',1,n_dir);
              bd_data_delta = -1i*kh*delta_lambda_rep.*u;
          end
          

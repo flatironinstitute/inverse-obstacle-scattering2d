@@ -320,7 +320,7 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
           mats.Fw_mat = -eye(n_bd)/2 + Sp + 1i* kh *( ddiff*Sik + ...
                  Spik * Spik - ...
                  eye(n_bd)/4) + ...
-                 1i*kh*bsxfun(@times,src_info.lambda,S+1i*kh*(D+eye(n_bd)/2)*Sik);
+                 1i*kh*bsxfun(@times,src_info.lambda(:),S+1i*kh*(D+eye(n_bd)/2)*Sik);
           mats.inv_Fw_mat = inv(mats.Fw_mat);
           mats.Fw_dir_mat = S+1i*kh*(D+eye(n_bd)/2)*Sik;
           mats.Fw_neu_mat = -eye(n_bd)/2 + Sp + 1i* kh *( ddiff*Sik + ...
@@ -336,7 +336,7 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
             %data for checking    
             uin_a = helm_c_p(kh,src_in,srctmp);
             dudnin_a = helm_c_gn(kh,src_in,srctmp);
-            rhs_a = dudnin_a+1i*kh*src_info.lambda.*uin_a;
+            rhs_a = dudnin_a+1i*kh*(src_info.lambda(:)).*uin_a;
             sol_a = mats.inv_Fw_mat * rhs_a;
     
             utest = mats.sol_to_receptor * sol_a;  

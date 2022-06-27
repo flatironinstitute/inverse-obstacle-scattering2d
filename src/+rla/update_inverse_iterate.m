@@ -142,6 +142,11 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
 %      opts.nppw: points per wavelength for discretizing updated curve (10)
 %      opts.verbose: flag for displaying verbose messages during run
 %      (false)
+%      opts.constphasefactor : flag, allow for a constant phase difference 
+%                        between measurements and model. for each update,
+%                        the current optimal phase is used and the
+%                        derivatives are updated accordingly (false)
+%                        
 %
 % Output argument
 %   deltas: update struct
@@ -152,6 +157,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
 %      deltas.iter_filter_bdry: number of iterations of filter used to
 %         obtain the update
 %      deltas.iter_type: type of optimization used in the update step
+%      deltas.phase: optimal constant phase if used (if not 
+%                           used, set to 1) 
 %   src_out: ouput source info struct
 %   mats_out: output mats struct
 %   fields_out: output fields struct
@@ -183,6 +190,17 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
         ncoeff_impedance = opts.ncoeff_impedance;
     end
     
+    lambdareal = true;
+    if(isfield(opts,'lambdareal'))
+        lambdareal = opts.lambdareal;
+    end
+    opts_use.lambdareal = lambdareal;
+    
+    constphasefactor = false;
+    if(isfield(opts,'constphasefactor'))
+        constphasefactor = opts.constphasefactor;
+    end
+    opts_use.constphasefactor = constphasefactor;
     
     nppw = 10;
     rlam = Inf;
@@ -196,7 +214,6 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
         eps_curv = optim_opts.eps_curv;
         
     end
-    
     
     optim_type = 'gn';
     if(isfield(optim_opts,'optim_type'))
@@ -220,13 +237,22 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
     
     
     % update the geometry part
-    rhs = u_meas.uscat_tgt(:) - fields.uscat_tgt(:);
     
     bc_use = [];
     bc_use.type = bc.type;
     bc_use.invtype = 'o';
     
     frechet_mats = rla.get_frechet_ders(kh,mats,src_info,u_meas,fields,bc_use,opts_use);
+
+    if (constphasefactor)
+        [phase,Minv] = optimal_phase_and_jacobian( ...
+            u_meas.uscat_tgt(:),fields.uscat_tgt(:),frechet_mats.bdry);
+    else
+        phase = 1;
+        Minv = frechet_mats.bdry;
+    end
+    
+    rhs = u_meas.uscat_tgt(:) - phase*fields.uscat_tgt(:);
     
     opts_update_geom = [];
     opts_update_geom.eps_curv = eps_curv;
@@ -254,10 +280,11 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
     res = res_in;
     ier = 0;
     
-    
     if(strcmpi(bc.invtype,'o') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io'))
         deltas.nmodes_bdry = opts_use.ncoeff_boundary;
-        Minv = [real(frechet_mats.bdry); imag(frechet_mats.bdry)];
+        
+        Minv = [real(Minv); imag(Minv)];
+        
         if(strcmpi(optim_type,'gn') || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
             delta_bdry_gn = Minv \ [real(rhs(:)); imag(rhs(:))];
             delta_bdry_gn0 = delta_bdry_gn;
@@ -267,7 +294,13 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                 [src_out_gn,ier_gn] = rla.update_geom(src_info,ncoeff_boundary,delta_bdry_gn,opts_update_geom);
                 [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);
                 fields_out_gn = rla.compute_fields(kh,src_out_gn,mats_out_gn,u_meas,bc,opts);
-                rhs_gn = u_meas.uscat_tgt(:) - fields_out_gn.uscat_tgt(:);
+                if (constphasefactor)
+                    phase = optimal_phase_and_jacobian( ... 
+                        u_meas.uscat_tgt(:), fields_out_gn.uscat_tgt(:));
+                else
+                    phase = 1;
+                end
+                rhs_gn = u_meas.uscat_tgt(:) - phase*fields_out_gn.uscat_tgt(:);
                 res_gn = norm(rhs_gn(:))/norm(u_meas.uscat_tgt(:));
                 
                 if(ier_gn == 0 && res_gn <= res_in) 
@@ -300,12 +333,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             if(ier_gn ~=0)
                 mats_out_gn = mats;
                 fields_out_gn = fields;
+                src_out_gn = src_out;
                 res_gn = res_in;    
             end
             
             if(res_gn >= res_in)
                 mats_out_gn = mats;
                 fields_out_gn = fields;
+                src_out_gn = src_out;
                 res_gn = res_in;
                 ier_gn = -5;
             end
@@ -322,7 +357,13 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                 [src_out_sd,ier_sd] = rla.update_geom(src_info,ncoeff_boundary,delta_bdry_sd,opts_update_geom);
                 [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
                 fields_out_sd = rla.compute_fields(kh,src_out_sd,mats_out_sd,u_meas,bc,opts);
-                rhs_sd = u_meas.uscat_tgt(:) - fields_out_sd.uscat_tgt(:);
+                if (constphasefactor)
+                    phase = optimal_phase_and_jacobian( ... 
+                        u_meas.uscat_tgt(:), fields_out_sd.uscat_tgt(:));
+                else
+                    phase = 1;
+                end
+                rhs_sd = u_meas.uscat_tgt(:) - phase*fields_out_sd.uscat_tgt(:);
                 res_sd = norm(rhs_sd(:))/norm(u_meas.uscat_tgt(:));
                 if(ier_sd == 0 && res_sd<=res_in) 
                     iter_filter_bdry_sd = iter-1;
@@ -355,12 +396,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             if(ier_sd ~=0)
                 mats_out_sd = mats;
                 fields_out_sd = fields;
+                src_out_sd  = src_out;
                 res_sd = res_in;
             end
             
             if(res_sd >= res_in)
                 mats_out_sd = mats;
                 fields_out_sd = fields;
+                src_out_sd = src_out;
                 res_sd = res_in;
                 ier_sd = -5;
             end
@@ -386,6 +429,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             deltas.iter_filter_bdry = iter_filter_bdry_gn;
             mats_out = mats_out_gn;
             fields_out = fields_out_gn;
+            
+            
             ier = ier_gn;
             src_out = src_out_gn;
             res = res_gn;
@@ -399,8 +444,17 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             src_out = src_out_sd;
             res = res_sd;
         end      
+
+        if (constphasefactor)
+            phase = optimal_phase_and_jacobian( ... 
+            u_meas.uscat_tgt(:), fields_out.uscat_tgt(:));
+            deltas.phase = phase;
+        else
+            deltas.phase = 1;
+        end
+        
+        
     end
-    
     
     % Now update impedance holding boundary fixed
     
@@ -412,13 +466,25 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
         bc_use.type = bc.type;
         bc_use.invtype = 'i';
         
-        
         frechet_mats = rla.get_frechet_ders(kh,mats_out,src_out,u_meas, ...
           fields_out,bc_use,opts_use);
-        Minv = [real(frechet_mats.impedance); imag(frechet_mats.impedance)];
-        rhs = u_meas.uscat_tgt(:) - fields_out.uscat_tgt(:);
+    
+        if (constphasefactor)
+            [phase,Minv] = optimal_phase_and_jacobian( ...
+                u_meas.uscat_tgt(:),fields.uscat_tgt(:),...
+                frechet_mats.impedance);
+        else
+            phase = 1;
+            Minv = frechet_mats.impedance;
+        end
+            
+        rhs = u_meas.uscat_tgt(:) - phase*fields_out.uscat_tgt(:);
+        if (lambdareal)
+            Minv = [real(Minv); imag(Minv)];
+            rhs = [real(rhs(:)); imag(rhs(:))];
+        end
         if(strcmpi(optim_type,'gn') || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
-            delta_imp_gn = Minv \ [real(rhs(:)); imag(rhs(:))];
+            delta_imp_gn = Minv\rhs;
             delta_imp_gn0 = delta_imp_gn;
             ier_gn = 10;
             iter_filter_imp_gn = -1;
@@ -436,11 +502,18 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                     h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + ...
                         sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
                 end
-                src_out_gn.lambda = src_out_gn.lambda + h_upd';  
+                src_out_gn.lambda = src_out_gn.lambda + h_upd.';  
         
                 [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);
                 fields_out_gn = rla.compute_fields(kh,src_out_gn,mats_out_gn,u_meas,bc,opts);
-                rhs_gn = u_meas.uscat_tgt(:) - fields_out_gn.uscat_tgt(:);
+                if (constphasefactor)
+                    phase = optimal_phase_and_jacobian( ... 
+                        u_meas.uscat_tgt(:), fields_out_gn.uscat_tgt(:));
+                else
+                    phase = 1;
+                end
+                
+                rhs_gn = u_meas.uscat_tgt(:) - phase*fields_out_gn.uscat_tgt(:);
                 res_imp_gn = norm(rhs_gn(:))/norm(u_meas.uscat_tgt(:));
                 
                 if(res_imp_gn <= res_in) 
@@ -456,7 +529,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                         gauss_new = zeros(1,length(gauss_val));
                         gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
                         gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
-                        delta_imp_gn = (delta_imp_gn0'.*gauss_new)';
+                        delta_imp_gn = (delta_imp_gn0.'.*gauss_new).';
                     elseif(strcmpi(filter_type,'step_length'))
                         delta_imp_gn = delta_imp_gn0/(2^(iter));
                     end
@@ -473,14 +546,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             
             
             if(res_imp_gn >= res_in)
-                mats_out_gn = mats;
-                fields_out_gn = fields;
+                mats_out_gn = mats_out;
+                fields_out_gn = fields_out;
                 res_imp_gn = res_in;
                 %ier_imp_gn = -5;
             end
         end
         if(strcmpi(optim_type,'sd')  || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
-            delta_imp_sd = Minv'*[real(rhs(:)); imag(rhs(:))];
+            delta_imp_sd = Minv'*rhs;
             
             t = delta_imp_sd'*delta_imp_sd/norm(Minv*delta_imp_sd)^2;
             delta_imp_sd = t*delta_imp_sd;
@@ -496,12 +569,23 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                 hcoefs_use = delta_imp_sd(:);
                 n = length(src_out.xs);
                 t = 0:2*pi/n:2*pi*(1.0-1.0/n); 
-                h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
-                src_out_sd.lambda = src_out_sd.lambda + h_upd';  
+                if (nh == 0)
+                    h_upd = cos(t*0)*hcoefs_use(1);
+                else
+                    h_upd = (cos(t'*(0:nh))*hcoefs_use(1:(nh+1)) + sin(t'*(1:nh))*hcoefs_use((nh+2):end)).';
+                end
+                src_out_sd.lambda = src_out_sd.lambda + h_upd.';  
         
                 [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
                 fields_out_sd = rla.compute_fields(kh,src_out_sd,mats_out_sd,u_meas,bc,opts);
-                rhs_sd = u_meas.uscat_tgt(:) - fields_out_sd.uscat_tgt(:);
+                if (constphasefactor)
+                    phase = optimal_phase_and_jacobian( ... 
+                        u_meas.uscat_tgt(:), fields_out_sd.uscat_tgt(:));
+                else
+                    phase = 1;
+                end
+                
+                rhs_sd = u_meas.uscat_tgt(:) - phase*fields_out_sd.uscat_tgt(:);
                 res_imp_sd = norm(rhs_sd(:))/norm(u_meas.uscat_tgt(:));
                 if(res_imp_sd<=res_in) 
                     iter_filter_imp_sd = iter-1;
@@ -516,7 +600,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
                         gauss_new = zeros(1,length(gauss_val));
                         gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
                         gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
-                        delta_imp_sd = (delta_imp_sd0'.*gauss_new)';
+                        delta_imp_sd = (delta_imp_sd0.'.*gauss_new).';
                     elseif(strcmpi(filter_type,'step_length'))
                         delta_imp_sd = delta_imp_sd0/(2^(iter));
                     end
@@ -534,8 +618,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             
             
             if(res_imp_sd >= res_in)
-                mats_out_sd = mats;
-                fields_out_sd = fields;
+                mats_out_sd = mats_out;
+                fields_out_sd = fields_out;
                 res_imp_sd = res_in;
                 %ier_imp_sd = -5;
                 
@@ -574,5 +658,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             src_out = src_out_sd;
             res = res_imp_sd;
         end      
+        if (constphasefactor)
+            deltas.phase = optimal_phase_and_jacobian( ... 
+                u_meas.uscat_tgt(:), fields_out.uscat_tgt(:));
+            
+        else
+            deltas.phase = 1;
+        end
+        
     end 
+    
 end
