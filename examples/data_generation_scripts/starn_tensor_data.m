@@ -14,11 +14,13 @@ nc = 3;
 coefs = zeros(2*nc+1,1);
 coefs(1) = 1;
 coefs(nc+1) = 0.3;
+
+
 src_info = geometries.starn(coefs,nc,n);
 L = src_info.L;
 
 
-nk = 30;
+nk = 1;
 
 
 % Test obstacle Frechet derivative for Dirichlet problem
@@ -36,14 +38,18 @@ opts.test_analytic = true;
 opts.src_in = src0;
 opts.verbose=true;
 
+
+m  = ceil(60*1.5);
+m = 60;
 % set target locations
 %receptors (r_{\ell})
 r_tgt = 10;
-n_tgt = 88;
+n_tgt = m;
 t_tgt = 0:2*pi/n_tgt:2*pi-2*pi/n_tgt;
 
 % Incident directions (d_{j})
-n_dir = 200;
+n_dir = 120;
+n_dir = m;
 t_dir = 0:2*pi/n_dir:2*pi-2*pi/n_dir;
 
 [t_tgt_grid,t_dir_grid] = meshgrid(t_tgt,t_dir);
@@ -65,6 +71,10 @@ src_info = geometries.starn(coefs,nc,n);
 % Set of frequencies (k_{i})
 dk = 0.25;
 kh = 1:dk:(1+(nk-1)*dk);
+kh = 7.5*1.5;
+kh = 10;
+
+
 
 u_meas = cell(nk,1);
 
@@ -91,3 +101,25 @@ end
 
 
 save(fname,'u_meas','-append');
+
+figure
+clf
+uscat_tgt = reshape(fields.uscat_tgt,[n_dir,n_tgt]);
+uhat = fft2(uscat_tgt);
+d = abs(fftshift(uhat));
+imagesc(abs(uscat_tgt));
+
+colorbar();
+
+
+figure
+clf
+imagesc(d)
+colorbar();
+
+figure;
+clf();
+plot(src_info.xs,src_info.ys,'b.');
+axis equal;
+
+

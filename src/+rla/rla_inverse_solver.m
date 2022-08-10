@@ -53,7 +53,7 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
 %    optim_opts - optimization options struct, default values in brackets
 %       optim_opts.eps_curv: constraint for high frequency content of
 %             curvature of geometry (Inf)
-%       optim_opts.ncurv: fourier coefficient number for defining 
+%       optim_opts.n_curv: fourier coefficient number for defining 
 %           the tail of curvature for imposing above constraint
 %           (max(30,opts.ncoeff_boundary))
 %       optim_opts.optim_type: optimization type ('gn')
@@ -163,9 +163,7 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
    if(isempty(src_init))
        kh0 = u_meas{ik_list(1)}.kh;
        n = max(100,ceil(abs(kh0)*nppw));
-       src_init = geometries.ellipse(1,1,n);
-       
-       
+       src_init = geometries.ellipse(1,1,n);     
    end
    
    
