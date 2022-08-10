@@ -9,6 +9,23 @@ function [Ig,xgrid0,ygrid0] = lsm_tensor(n_tgt,n_dir,u_meas,alpha)
 %
 % The object is assumed to be contained in [-1.5,1.5], 
 % and the target grid is between [-3,3];
+%
+%
+%  Input arugments:
+%    n_tgt: number of equispaced targets on the radius 10 disk
+%    n_dir: number of equispaced incident directions, full aperture
+%    u_meas: measurement struct
+%        u_meas.uscat_tgt - scattered field at target locations, due
+%         to incident waves from all directions, ordered as
+%         uscat_tgt(n_dir,n_tgt)
+%        u_meas.kh - wavenumber
+%    alpha: regularization parameter (Recommended value 1e-3)
+%
+%  Output arguments:
+%    Ig: level set function
+%    [xgrid0,ygrid0]: mesh grid version of points in volume grid where
+%       level set function is evaluated
+
     Nd = n_tgt;
     hd = 2*pi/Nd;
     t_tgt = 0:hd:2*pi-hd;
