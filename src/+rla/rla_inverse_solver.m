@@ -172,11 +172,12 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
    n = length(src_info.xs);
    if(isempty(lam_init))
        src_info.lambda = ones(n,1);
-   else
+   elseif (isa(lam_init,'function_handle'))
        % fix this initialization
        t = 0:2*pi/n:2*pi*(1-1/n);
        src_info.lambda = lam_init(t(:));
-       
+   else
+       src_info.lambda = lam_init(:);
    end
    
    for i=1:npath

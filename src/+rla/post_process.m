@@ -72,13 +72,9 @@ function [] = post_process(inv_data,fname)
    
    
    stmp = vertcat(inv_tmp.src_info_all);
-   xsall = []; ysall = [];
-   for i = 1:length(stmp)
-       xsall = [xsall; stmp{i}.xs(:)];
-       ysall = [ysall; stmp{i}.ys(:)];
-   end
-   
-   
+   stmp2 = cell2mat(stmp);
+   xsall = horzcat(stmp2.xs);
+   ysall = horzcat(stmp2.ys);
    xmin = min(xsall);
    xmax = max(xsall);
    ymin = min(ysall);

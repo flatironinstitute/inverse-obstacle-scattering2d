@@ -130,7 +130,7 @@ function ipass = test_frechet_ders()
 
     % Test obstacle frechet derivative of impedance problem
     t = 0:2*pi/n:2*pi*(1.0-1.0/n);
-    src_info.lambda = sin(2*t)';
+    src_info.lambda = sin(2*t).';
     src_info.lambda = (sin(2*t) + 0.1*1i*(1+cos(2*t))).';
     bc = [];
     bc.type = 'Impedance';

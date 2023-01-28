@@ -58,6 +58,11 @@ function [frechet_mats] = get_frechet_ders(kh,mats,src_info,sensor_info,fields,b
    if(isfield(opts,'ncoeff_impedance'))
        nc_i = opts.ncoeff_impedance;
    end
+   if(~isfield(opts,'impedance_type'))
+       impedance_type = 'fourier';
+   else
+       impedance_type = opts.impedance_type;
+   end
    
    u = fields.uinc + fields.uscat;
    dudn = fields.dudninc + fields.dudnscat;
@@ -109,25 +114,46 @@ function [frechet_mats] = get_frechet_ders(kh,mats,src_info,sensor_info,fields,b
    
 
    if(strcmpi(bc.invtype,'i') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io'))
-     DFw_impedance = complex(zeros(m,2*nc_i+1));
-     for ivar=1:(2*nc_i + 1)
-         if(ivar<=nc_i+1)
-             h_upd = cos((ivar-1)*t);
-         else
-             h_upd = sin((ivar-nc_i-1)*t);
-         end  
-         
-         if(strcmpi(bc.type,'i') || strcmpi(bc.type,'Impedance'))
-             delta_lambda_rep = repmat(h_upd.',1,n_dir);
-             bd_data_delta = -1i*kh*delta_lambda_rep.*u;
+       if (strcmpi(impedance_type,'fourier'))
+         DFw_impedance = complex(zeros(m,2*nc_i+1));
+         for ivar=1:(2*nc_i + 1)
+             if(ivar<=nc_i+1)
+                 h_upd = cos((ivar-1)*t);
+             else
+                 h_upd = sin((ivar-nc_i-1)*t);
+             end  
+
+             if(strcmpi(bc.type,'i') || strcmpi(bc.type,'Impedance'))
+                 delta_lambda_rep = repmat(h_upd.',1,n_dir);
+                 bd_data_delta = -1i*kh*delta_lambda_rep.*u;
+             end
+
+
+             if(~ifflam)
+                DFw_col = mats.bdrydata_to_receptor*bd_data_delta;
+             end
+             DFw_impedance(:,ivar) = DFw_col(induse); 
          end
-         
-         
-         if(~ifflam)
-            DFw_col = mats.bdrydata_to_receptor*bd_data_delta;
+       else
+         DFw_impedance = complex(zeros(m,2));
+         for ivar=1:2
+             if(ivar==1)
+                 h_upd = ones(size(t));
+             else
+                 h_upd = src_info.H;
+             end  
+
+             if(strcmpi(bc.type,'i') || strcmpi(bc.type,'Impedance'))
+                 delta_lambda_rep = repmat(h_upd(:),1,n_dir);
+                 bd_data_delta = -1i*kh*delta_lambda_rep.*u;
+             end
+
+             if(~ifflam)
+                DFw_col = mats.bdrydata_to_receptor*bd_data_delta;
+             end
+             DFw_impedance(:,ivar) = DFw_col(induse); 
          end
-         DFw_impedance(:,ivar) = DFw_col(induse); 
-     end
+       end
      frechet_mats.impedance = DFw_impedance;
    end
 end
