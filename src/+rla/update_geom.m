@@ -93,6 +93,9 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
         src_out = src_info;
         ier = 1;
         varargout{1} = ier;
+        varargout{2} = 0;
+        varargout{3} = x_upd;            
+        varargout{4} = y_upd;
         return
     else
         dx_upd_dt = (src_info.Der_param*x_upd')';
@@ -150,6 +153,9 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
             if(ratio_curv > eps_curv)
                 ier = 2;
                 varargout{1} = ier;
+                varargout{2} = 0;
+                varargout{3} = x_upd;            
+                varargout{4} = y_upd;
                 src_out = src_info;
                 return
             end
@@ -159,13 +165,14 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
             lambda_hat = fft(src_info.lambda);
             tt_use = tts(:)/paramL;
             
+            
             kk = [(0:(n/2)) ((-n/2+1):-1)];
-            src_out.lambda = exp(1i*2*pi*tt_use*kk)*(lambda_hat(:)/n);
+            src_out.lambda = sum(exp(1i*2*pi*tt_use*kk).*((lambda_hat(:)).'),2)/n;
         end
     end
-    varargout{1} = ier;
+    varargout{1} = ier;    
     varargout{2} = tts(:);
-    
-    
+    varargout{3} = x_upd;            
+    varargout{4} = y_upd;
 
 end

@@ -73,7 +73,15 @@ function fields = compute_fields(kh,src_info,mats,sensor_info,bc,opts)
 %    fields.dudnscat(n,ndir) - the corresponding normal derivative of 
 %       scattered field on the boundary
 %    fields.uscat_tgt(nmeas) - scattered field at the sensor locations
-
+%    For Transmission only
+%    fields.uin(n,ndir) - scattered field on the boundary in the interior 
+%       of the obstacledue to the incident fields given by the unique 
+%       (ndir) directions in the sensor_info.tdir array (Transmission only)
+%    fields.dudnin(n,ndir) - scattered field on the boundary in the interior 
+%       of the obstacledue to the incident fields given by the unique 
+%       (ndir) directions in the sensor_info.tdir array (Transmission only)
+%
+%
    fields = [];
    
    if(nargin < 6)
@@ -124,7 +132,8 @@ function fields = compute_fields(kh,src_info,mats,sensor_info,bc,opts)
      n1 = numel(xs);
      bd_data = zeros(2*n1,n_dir,'like',1.0+1i);
      bd_data(1:2:end,:) = -a(2)*fields.uinc/q;
-     bd_data(2:2:end,:) = -b(2)*fields.dudninc;
+     bd_data(2:2:end,:) = -b(2)*fields.dudninc;          
+     
    end
    
    if(~ifflam)
@@ -142,6 +151,17 @@ function fields = compute_fields(kh,src_info,mats,sensor_info,bc,opts)
      if(strcmpi(bc.type,'n') || strcmpi(bc.type,'Neumann') || strcmpi(bc.type,'i') || strcmpi(bc.type,'Impedance'))
         fields.dudnscat = mats.Fw_neu_mat*sigma; 
      end
+     
+      if(strcmpi(bc.type,'t') || strcmpi(bc.type,'Transmission'))         
+         fields.dudnscat = mats.Fw_neu_mat*sigma;
+         fields.dudnin = mats.Fw_neu_mat_in*sigma;
+         fields.uin = mats.Fw_dir_mat_in*sigma;
+         
+%          fprintf('Error u=%d\n',max(abs(fields.uin(:)-(fields.uscat(:)+fields.uinc(:))))./max(abs(fields.uin(:))))
+%          fprintf('Error dudn=%d\n',max(abs(fields.dudnin(:)-b(2)*(fields.dudnscat(:)+fields.dudninc(:)))./max(abs(fields.dudnin(:)))))
+     end
+
+     
    end
    
 end
