@@ -66,13 +66,22 @@ function [] = post_process(inv_data,fname)
    xlabel('Frequency')
    drawnow;
    
-   n = length(res_all);
+   
+   if(isfield(inv_tmp,'src_info_all'))
+      ip = 1;
+      stmp = vertcat(inv_tmp.src_info_all);
+      stmp2 = cell2mat(stmp);
+      n = length(res_all);
+      khvec = repelem(kh,iter_count);
+   else
+      ip = 2;
+      stmp = vertcat(inv_tmp(:).src_info_opt);
+      stmp2 = stmp;
+      n = length(kh);
+      khvec = kh;
+      iter_vec = ones(size(khvec));
+   end
    F(n) = struct('cdata',[],'colormap',[]);
-   khvec = repelem(kh,iter_count);
-   
-   
-   stmp = vertcat(inv_tmp.src_info_all);
-   stmp2 = cell2mat(stmp);
    xsall = horzcat(stmp2.xs);
    ysall = horzcat(stmp2.ys);
    xmin = min(xsall);
@@ -103,9 +112,17 @@ function [] = post_process(inv_data,fname)
    figure
    figure('Renderer','zbuffer')
    if(nargin == 1)
-      plot(stmp{i}.xs,stmp{i}.ys,'k.')
+      if(ip == 1)
+         plot(stmp{i}.xs,stmp{i}.ys,'k.')
+      else
+         plot(stmp(i).xs,stmp(i).ys,'k.')
+      end
    else
-      plot(stmp{i}.xs,stmp{i}.ys,'k.',src_ex.xs,src_ex.ys,'b.')
+      if(ip == 1)
+        plot(stmp{i}.xs,stmp{i}.ys,'k.',src_ex.xs,src_ex.ys,'b.')
+      else
+        plot(stmp(i).xs,stmp(i).ys,'k.',src_ex.xs,src_ex.ys,'b.')
+      end
    end
    title(['kh=' num2str(khvec(1)) ]);
    axis equal
@@ -115,9 +132,17 @@ function [] = post_process(inv_data,fname)
    set(gca,'NextPlot','replacechildren');
    for i=1:n
        if(nargin == 1)
-          plot(stmp{i}.xs,stmp{i}.ys,'k.')
+          if(ip == 1)
+             plot(stmp{i}.xs,stmp{i}.ys,'k.')
+          else
+             plot(stmp(i).xs,stmp(i).ys,'k.')
+          end
        else
-          plot(stmp{i}.xs,stmp{i}.ys,'k.',src_ex.xs,src_ex.ys,'b.')
+          if(ip == 1)
+             plot(stmp{i}.xs,stmp{i}.ys,'k.',src_ex.xs,src_ex.ys,'b.')
+          else
+             plot(stmp(i).xs,stmp(i).ys,'k.',src_ex.xs,src_ex.ys,'b.')
+          end
        end
        
        title(['kh=' num2str(khvec(i)) '  iteration=' num2str(iter_vec(i))]);

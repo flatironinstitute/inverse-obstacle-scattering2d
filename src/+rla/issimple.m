@@ -20,7 +20,7 @@ function out = issimple(xs,ys,nover)
     
     P = polyshape(xbig,ybig,'KeepCollinearPoints',true);
 %     fprintf('NumRegions=%d\n',P.NumRegions)
-    if P.NumRegions>1
+    if (P.NumRegions>1 || P.NumHoles > 0)
         out = false;
     else
         out = true;

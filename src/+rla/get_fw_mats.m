@@ -44,7 +44,7 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
 %    mats.Fw_mat - Matrix corresponding to discretizing the boundary
 %    integral equation
 %    mats.inv_Fw_mat = inverse of mats.Fw_mat
-%    mats.Fw_dir_mat = matrix to obtain dirichlet data from the given
+%    mats.Fw_dir_mat = matrix to obtain Dirichlet data from the given
 %       representation
 %    mats.Fw_neu_mat = matrix to obtain Neumann data from given
 %       representation (note that this is slightly different when
@@ -56,6 +56,13 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
 %    mats.S, mats.D, mats.Sp, mats.Spik, mats.ddiff, mats.Sik - 
 %       optional matrices used in discretization which will
 %       be stored if opts.store_all = true
+%    For transmission problem only
+%    mats.Fw_dir_mat_in = matrix to obtain Dirichlet data from the given
+%       representation in the interior of the domain ( just for the
+%       transmission problem
+%    mats.Fw_neu_mat_in = matrix to obtain Neumanna data from the given
+%       representation in the interior of the domain ( just for the
+%       transmission problem)
 %    
 %
    if nargin < 5
@@ -78,7 +85,7 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
           src_in = opts.src_in;
        else
           if(verbose)
-            fprintf('Interior source points not set, assuming to be origin\n\n');
+%             fprintf('Interior source points not set, assuming to be origin\n\n');
           end
           src_in = zeros(2,1);
        end
@@ -87,8 +94,8 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
        else
 	 xmax = max(src_info.xs(:));  ymax = max(src_info.ys(:));
           if(verbose)
-            fprintf('Exterior source points not set, assuming bounded domain\n');
-	    fprintf('Exterior point (%5.2e, %5.2e) used\n\n',2*xmax,2*ymax);
+%             fprintf('Exterior source points not set, assuming bounded domain\n');
+% 	    fprintf('Exterior point (%5.2e, %5.2e) used\n\n',2*xmax,2*ymax);
           end
           src_out = [2*xmax;2*ymax];
        end
@@ -166,7 +173,7 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
             uin_a = helm_c_p(kh,src_in,srctmp);
             rhs_a = uin_a;
             sol_a = mats.inv_Fw_mat * rhs_a;
-    
+   
             utest = mats.sol_to_receptor * sol_a;  
             uex = helm_c_p(kh,src_in,tgt); 
             varargout{1} = norm(utest(:)-uex(:))/norm(uex(:));
@@ -191,10 +198,13 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
       %  Unknown ordering \sigma_{1},\mu_{1},\sigma_{2},\mu_{2}....
       %  Output ordering [au]/q_{1}, [b du/dn]_{1}, [au]/q_{2}, [b du/dn]_{2}
       %
+      % We should add the 
       if(strcmpi(bctype,'t') || strcmpi(bctype,'Transmission'))
           zks = bc.transk; a = bc.transa; b = bc.transb;
+          khi = zks(1); kh = zks(2);
+          
 	      q = 0.5*(a(1)/b(1)+a(2)/b(2));
-          mats.Fw_mat = transmission_mat(zks,a,b,norder,h_bd,srctmp);
+          mats.Fw_mat = transmission_mat(zks,a,b,norder,h_bd,srctmp);                    
           mats.inv_Fw_mat = inv(mats.Fw_mat);
           
           %operators to target
@@ -205,14 +215,49 @@ function [mats,varargout] = get_fw_mats(kh,src_info,bc,sensor_info,opts)
           mats.sol_to_receptor(:,1:2:end) = -S_tgt/b(2);
           mats.sol_to_receptor(:,2:2:end) = D_tgt/b(2);
           mats.bdrydata_to_receptor = mats.sol_to_receptor*mats.inv_Fw_mat;
-          %bdry values of v2
+          
+          %domain information
+          dxs = src_info.dxs;
+          dys = src_info.dys;
+          ds  = src_info.ds;
+          Der = specdiffmat(n_bd,srctmp)*2*pi/src_info.L;%src_info.Der;
+%           norm(Der-specdiffmat(n_bd,srctmp)*2*pi/src_info.L)
+          %bdry values of interior
+          S1  = slp_mat(khi,norder,h_bd,srctmp);    
+          Sp1 = sprime_ext_mat(khi,norder,h_bd,srctmp) + eye(n_bd)/2;    
+          D1  = dlp_ext_mat(khi,norder,h_bd,srctmp) - eye(n_bd)/2;     
+          T1  = Der * S1 * Der  + khi^2 * (bsxfun(@times,bsxfun(@times,(dys./ds)',S1),dys./ds) + ...
+            bsxfun(@times,bsxfun(@times,(dxs./ds)',S1),dxs./ds));
+          
+          %bdry values of v2(exterior)
           S2  = slp_mat(zks(2),norder,h_bd,srctmp);
           Sp2 = sprime_ext_mat(zks(2),norder,h_bd,srctmp) + eye(n_bd)/2;
           D2  = dlp_ext_mat(zks(2),norder,h_bd,srctmp) - eye(n_bd)/2;
+          T2 = Der * S2 * Der  + kh^2 * (bsxfun(@times,bsxfun(@times,(dys./ds)',S2),dys./ds) + ...
+            bsxfun(@times,bsxfun(@times,(dxs./ds)',S2),dxs./ds));   
+        
+          %bdry values for u
+          %first uex keeping same name as Dirichlet to maintain the
+          %convention
           mats.Fw_dir_mat = zeros(n1,2*n1,'like',1.0+1i);
 	      mats.Fw_dir_mat(:,1:2:end) = -S2/b(2);
-	      mats.Fw_dir_mat(:,2:2:end) = D2/b(2);
+	      mats.Fw_dir_mat(:,2:2:end) = (D2+eye(n_bd)/2)/b(2);
+          %next we have the interior field. Everything interior is finished
+          %with _in this will follow for the neumann operator
+          mats.Fw_dir_mat_in = zeros(n1,2*n1,'like',1.0+1i);
+	      mats.Fw_dir_mat_in(:,1:2:end) = -S1;
+	      mats.Fw_dir_mat_in(:,2:2:end) = D1-eye(n_bd)/2;                    
           
+          %bdry values for dudnex                    
+          %first exterior
+          mats.Fw_neu_mat = zeros(n1,2*n1,'like',1.0+1i);
+          mats.Fw_neu_mat(:,1:2:end) = -(Sp2-eye(n_bd)/2)/b(2);
+          mats.Fw_neu_mat(:,2:2:end) = T2/b(2);          
+          %now interior
+          mats.Fw_neu_mat_in = zeros(n1,2*n1,'like',1.0+1i);
+          mats.Fw_neu_mat_in(:,1:2:end) = -(Sp1+eye(n_bd)/2);
+          mats.Fw_neu_mat_in(:,2:2:end) = T1;          
+
           if (test_analytic)
             %data for checking  
             uin_a = helm_c_p(zks(2),src_in,srctmp);

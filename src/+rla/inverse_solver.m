@@ -241,7 +241,7 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
         end
         
         [deltas{iter},src_info_all{iter},mats_out,fields_all{iter},res_all(iter),ier(iter),ierimp(iter)] = ...
-           rla.update_inverse_iterate(kh,src_use,mats,fields,u_meas,bc,optim_opts,opts_use);
+           rla.update_inverse_iterate(kh,src_use,mats,fields,u_meas,bc,optim_opts_use,opts_use);
         if(verbose)
             fprintf('iter number: %d \t optim_type: %s \t residue: %d \t ier: %d\n',iter,optim_opts_use.optim_type,res_all(iter),ier(iter));
         end
