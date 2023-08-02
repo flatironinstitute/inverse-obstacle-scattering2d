@@ -1,4 +1,4 @@
-function [deltas,src_out,mats_out,fields_out,res,ier] = ...
+function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
    update_inverse_iterate(kh,src_info,mats,fields,u_meas,bc,optim_opts,opts)
 %
 %  This subroutine updates the boundary and/or the impedance function
@@ -290,7 +290,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
     src_out = src_info;
     mats_out = mats;
     fields_out = fields;
-    ier = 0;
+    ier_obs = 0;
+    ier_imp = 0;
     Minv = [real(Minv+Minvbar); imag(Minv+Minvbar)];
         
         
@@ -442,7 +443,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             fields_out = fields_out_gn;
             
             
-            ier = ier_gn;
+            ier_obs = ier_gn;
             src_out = src_out_gn;
             res = res_gn;
         elseif(strcmpi(deltas.iter_type,'sd'))
@@ -451,7 +452,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             
             mats_out = mats_out_sd;
             fields_out = fields_out_sd;
-            ier = ier_sd;
+            ier_obs = ier_sd;
             src_out = src_out_sd;
             res = res_sd;
         end      
@@ -738,6 +739,9 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             fields_out = fields_out_gn;
             src_out = src_out_gn;
             res = res_imp_gn;
+
+            ier_imp = ier_imp_gn;
+
             
         elseif(strcmpi(deltas.iter_imp_type,'sd'))
             deltas.delta_impedance = delta_imp_sd;
@@ -747,6 +751,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier] = ...
             fields_out = fields_out_sd;
             src_out = src_out_sd;
             res = res_imp_sd;
+
+            ier_imp = ier_imp_sd;
         end      
         if (constphasefactor)
             deltas.phase = optimal_const_and_jacobian( ... 

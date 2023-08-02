@@ -200,6 +200,7 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
     fields_all = cell(maxit,1);
     deltas = cell(maxit,1);
     ier = zeros(maxit,1);
+    ierimp = zeros(maxit,1);
     store_fields = false;
     if(isfield(opts,'store_fields'))
         store_fields = opts.store_fields;
@@ -239,13 +240,15 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
             end
         end
         
-        [deltas{iter},src_info_all{iter},mats_out,fields_all{iter},res_all(iter),ier(iter)] = ...
+        [deltas{iter},src_info_all{iter},mats_out,fields_all{iter},res_all(iter),ier(iter),ierimp(iter)] = ...
            rla.update_inverse_iterate(kh,src_use,mats,fields,u_meas,bc,optim_opts_use,opts_use);
         if(verbose)
             fprintf('iter number: %d \t optim_type: %s \t residue: %d \t ier: %d\n',iter,optim_opts_use.optim_type,res_all(iter),ier(iter));
         end
         
-        if(ier(iter) ~=0) 
+        if ( (strcmpi(bc.invtype,'i') && ierimp(iter)~= 0) || ...
+             (strcmpi(bc.invtype,'o') && ier(iter)~= 0)   || ...
+             ( (strcmpi(bc.invtype,'io') || strcmpi(bc.invtype,'oi') )  && (ier(iter)~= 0 && ierimp(iter)~=0)))
             exit_criterion = -1;
             break;
         end
