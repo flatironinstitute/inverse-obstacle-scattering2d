@@ -2,7 +2,7 @@ function ipass = test_frechet_ders()
     ipass = 1;
     n  = 300;
     a = 1.1;  
-    b = 1.3;  
+    b = 1.8;  
     src_info = geometries.ellipse(a,b,n);
 
     plot(src_info.xs,src_info.ys,'b.');
@@ -227,7 +227,7 @@ function ipass = test_frechet_ders()
         fields2 = rla.compute_fields(kh,src_out2,mats2,sensor_info,bc,opts);
 
         uder_est = (fields1.uscat_tgt(:) - fields2.uscat_tgt(:))/2/dh;
-        errs(ig) = norm(uder-uder_est)
+        errs(ig) = norm(uder-uder_est);
     end
     if(errs(2)>1e-4) 
         ipass = 0;
