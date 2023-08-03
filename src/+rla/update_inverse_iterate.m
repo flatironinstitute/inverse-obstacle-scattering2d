@@ -68,8 +68,12 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
 %      src_info.dys = dydt;
 %      src_info.ds = sqrt(dxdt^2 + dydt^2);
 %      src_info.h = h in trapezoidal parametrization;
-%      src_info.lambda - imepdance value at discretization nodes 
-%           (optional if solving impedance boundary value problem);
+%      src_info.lambda - imepedance value at discretization nodes 
+%           (only if solving impedance boundary value problem with
+%            opts.impedance_type = 'fourier')
+%      src_info.lamcfs - imepedance coefficients in constant + kappa model
+%           (only if solving impedance boundary value problem with
+%            opts.impedance_type = 'constkappa')
 %   mats - matrix structure
 %    mats.Fw_mat - Matrix corresponding to discretizing the boundary
 %    integral equation
@@ -254,7 +258,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     bc_use.type = bc.type;
     bc_use.invtype = 'o';
     
-    frechet_mats = rla.get_frechet_ders(kh,mats,src_info,u_meas,fields,bc_use,opts_use);
+    frechet_mats = rla.get_frechet_ders(kh,mats,src_info,u_meas,...
+        fields,bc_use,opts_use);
 
     if (constphasefactor)
         [phase,Minv,Minvbar] = optimal_const_and_jacobian( ...
@@ -282,9 +287,10 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     end
     
     
- 
     opts_update_geom.nppw = nppw;
     opts_update_geom.rlam = rlam;
+
+    opts_update_geom.impedance_type = impedance_type;
     
     res = norm(rhs(:))/norm(u_meas.uscat_tgt(:));
     src_out = src_info;
@@ -470,21 +476,12 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     
     % Now update impedance holding boundary fixed
     
-    
     if((strcmpi(bc.invtype,'i') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io')) && ...
             (ncoeff_impedance>=0 || strcmpi(impedance_type,'constkappa')))
         if (strcmpi(impedance_type,'fourier'))
             fprintf('Inside update iterate, kh = %d, ncoeff_impedance=%d \n',kh,ncoeff_impedance);
         else
             fprintf('Inside update iterate, kh = %d, fitting constant plus curvature impedance\n',kh);
-            % reproject lambda onto constant+curvature to start
-            basis = [ones(length(src_out.xs),1), src_out.H(:)];
-            if cond(basis) > 10^4
-                fprintf('here, bad imp basis\n')
-                basis = ones(length(src_out.xs),1);
-            end
-            cf = basis\src_out.lambda;
-            src_out.lambda(:) = basis*cf;
         end
 
         bc_use = [];
@@ -577,8 +574,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                 
                 src_out_gn = src_out;
                 n = length(src_out.xs);
-                h_upd = [ones(n,1) src_out.H(:)]*delta_imp_gn(:);
-                src_out_gn.lambda(:) = src_out_gn.lambda(:) + h_upd(:);  
+                src_out_gn.lamcfs(:) = src_out_gn.lamcfs(:) + delta_imp_gn(:);
+                src_out_gn.lambda(:) = [ones(n,1) src_out.H(:)]*src_out_gn.lamcfs(:);
                 [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);
                 fields_out_gn = rla.compute_fields(kh,src_out_gn,mats_out_gn,u_meas,bc,opts);
                 if (constphasefactor)
@@ -680,8 +677,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                 
                 src_out_sd = src_out;
                 n = length(src_out.xs);
-                h_upd = [ones(n,1) src_out.H(:)]*delta_imp_sd(:);
-                src_out_sd.lambda(:) = src_out_sd.lambda(:) + h_upd(:);  
+                src_out_sd.lamcfs(:) = src_out_sd.lamcfs(:) + delta_imp_sd(:);
+                src_out_sd.lambda(:) = [ones(n,1) src_out.H(:)]*src_out_sd.lamcfs(:);
         
                 [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
                 fields_out_sd = rla.compute_fields(kh,src_out_sd,mats_out_sd,u_meas,bc,opts);

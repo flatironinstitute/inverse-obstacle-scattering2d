@@ -45,6 +45,8 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
 %      src_info.h = h in trapezoidal parametrization;
 %      src_info.lambda - imepdance value at discretization nodes 
 %           (optional if solving impedance boundary value problem);
+%      src_info.lamcfs - imepdance coefficients for constant + kappa 
+%            representation (only if impedance_type = 'constkappa')
 %   nh - max fourier content of normal update to curve
 %   hcoefs(2*nh+1,1) or (1,2*nh+1) - fourier coeffs of normal update to the
 %       curve;
@@ -54,6 +56,8 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
 %         (Inf)
 %      opts.n_curv - index determining the tail of the curvature test 
 %         above
+%      opts.impedancetype - string
+%         
 %
 %  Output arguments:
 %    src_info_out - updated source info struct
@@ -64,7 +68,7 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
 %                   of updated curve
 %           
 
-
+    impedance_type = 'fourier';
     if(nargin < 4)
         opts = [];
     end
@@ -87,6 +91,10 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
         check_curv = true;
         eps_curv = opts.eps_curv;
         
+    end
+
+    if isfield(opts,'impedance_type')
+        impedance_type = opts.impedance_type;
     end
 
     if (~rla.issimple(x_upd,y_upd))
@@ -162,17 +170,22 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
         end
         
         if isfield(src_info,'lambda')
-            lambda_hat = fft(src_info.lambda);
-            tt_use = tts(:)/paramL;
-            
-            
-            kk = [(0:(n/2)) ((-n/2+1):-1)];
-            src_out.lambda = exp(1i*2*pi*tt_use*kk)*(lambda_hat(:)/n);
+            if (strcmpi(impedance_type,'fourier'))
+                lambda_hat = fft(src_info.lambda);
+                tt_use = tts(:)/paramL;
+                
+                
+                kk = [(0:(n/2)) ((-n/2+1):-1)];
+                src_out.lambda = exp(1i*2*pi*tt_use*kk)*(lambda_hat(:)/n);
+            elseif (strcmpi(impedance_type,'constkappa'))
+                src_out.lambda = src_info.lamcfs(1) +  ...
+                    src_info.lamcfs(2)*src_out.H;
+                src_out.lamcfs = src_info.lamcfs;
+            end
         end
-    end
-    varargout{1} = ier;    
-    varargout{2} = tts(:);
-    varargout{3} = x_upd;            
-    varargout{4} = y_upd;
+        varargout{1} = ier;    
+        varargout{2} = tts(:);
+        varargout{3} = x_upd;            
+        varargout{4} = y_upd;
 
 end

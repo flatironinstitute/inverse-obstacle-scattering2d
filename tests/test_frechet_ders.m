@@ -64,8 +64,6 @@ function ipass = test_frechet_ders()
     rng(1)
     hcoefs = 0.1*rand(1,2*nh+1);
     uder = frechet_mats.bdry*hcoefs(:);
-    
-
 
     errs = zeros(2,1);
     for ig=1:2
@@ -193,6 +191,78 @@ function ipass = test_frechet_ders()
     if(errs(2)>1e-4)
         ipass = 0;
         fprintf('failed Impedance test impedance in frechet_ders test: %d\n',errs(2));
+    end
+    
+    % Test obstacle frechet derivative of impedance problem
+    % impedance_type = constkappa
+    t = 0:2*pi/n:2*pi*(1.0-1.0/n);
+    rng(1)
+    hcoefs = 0.1*rand(1,2*nh+1);
+    
+    src_info.lamcfs = [1.1+0.5*1i; 0.4-0.3*1i];
+    src_info.lambda = src_info.lamcfs(1) + src_info.lamcfs(2)*src_info.H;
+    bc = [];
+    bc.type = 'Impedance';
+    bc.invtype = 'oi';
+    opts.impedance_type = 'constkappa';
+
+    [mats,~] = rla.get_fw_mats(kh,src_info,bc,sensor_info,opts);
+    fields = rla.compute_fields(kh,src_info,mats,sensor_info,bc,opts);
+
+    frechet_mats = rla.get_frechet_ders(kh,mats,src_info,sensor_info,fields,bc,opts);
+    uder = frechet_mats.bdry*hcoefs(:);
+
+    errs = zeros(2,1);
+    for ig=1:2
+        dh = 10^(-ig);
+        hcoefs_use = dh*hcoefs;
+        [src_out,~] = rla.update_geom(src_info,nh,hcoefs_use,opts);
+        [mats1,~] = rla.get_fw_mats(kh,src_out,bc,sensor_info,opts);
+        fields1 = rla.compute_fields(kh,src_out,mats1,sensor_info,bc,opts);
+
+
+        hcoefs_use2 = -dh*hcoefs;
+        [src_out2,~] = rla.update_geom(src_info,nh,hcoefs_use2,opts);
+        [mats2,~] = rla.get_fw_mats(kh,src_out2,bc,sensor_info,opts);
+        fields2 = rla.compute_fields(kh,src_out2,mats2,sensor_info,bc,opts);
+
+        uder_est = (fields1.uscat_tgt(:) - fields2.uscat_tgt(:))/2/dh;
+        errs(ig) = norm(uder-uder_est)
+    end
+    if(errs(2)>1e-4) 
+        ipass = 0;
+        fprintf('failed Impedance test obstacle in frechet_ders test (constkappa): %d\n',errs(2));
+    end
+    
+    % Test impedance frechet derivative of impedance problem
+    % impedance_type = const_kappa
+
+    hcoefs =  (0.1*rand(2,1) + 0.1*1i*rand(2,1));
+    
+    uder = frechet_mats.impedance*hcoefs(:);
+    errs = zeros(2,1);
+    for ig=1:2
+        dh = 10^(-ig);
+        hcoefs_use = dh*hcoefs;
+        hcoefs_use = hcoefs_use(:);
+        src_out = src_info;
+        src_out.lamcfs = src_out.lamcfs(:) + hcoefs_use(:);
+        src_out.lambda = src_out.lamcfs(1) + src_out.lamcfs(2)*src_out.H;
+        [mats1,~] = rla.get_fw_mats(kh,src_out,bc,sensor_info,opts);
+        fields1 = rla.compute_fields(kh,src_out,mats1,sensor_info,bc,opts);
+
+        src_out2 = src_info;
+        src_out2.lamcfs = src_out2.lamcfs(:) - hcoefs_use(:);
+        src_out2.lambda = src_out2.lamcfs(1) + src_out2.lamcfs(2)*src_out2.H;
+        [mats2,~] = rla.get_fw_mats(kh,src_out2,bc,sensor_info,opts);
+        fields2 = rla.compute_fields(kh,src_out2,mats2,sensor_info,bc,opts);
+
+        uder_est = (fields1.uscat_tgt(:) - fields2.uscat_tgt(:))/2/dh;
+        errs(ig) = norm(uder-uder_est);
+    end
+    if(errs(2)>1e-4)
+        ipass = 0;
+        fprintf('failed Impedance test impedance in frechet_ders test (constkappa): %d\n',errs(2));
     end
     
 end

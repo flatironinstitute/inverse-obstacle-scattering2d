@@ -107,8 +107,16 @@ function [frechet_mats] = get_frechet_ders(kh,mats,src_info,sensor_info,fields,b
          
          if(strcmpi(bc.type,'i') || strcmpi(bc.type,'Impedance'))
              bd_data_delta = kh^2*h_upd_nu.*u + src_info.Der*(h_upd_nu.*du);
-             lambda_rep = repmat(src_info.lambda,1,n_dir);
+             lambda_rep = repmat(src_info.lambda(:),1,n_dir);
              bd_data_delta = bd_data_delta - 1i*kh*lambda_rep.*h_upd_nu.*(dudn + repmat(src_info.H',1,n_dir).*u);
+             % if the impedance function depends on the boundary, add that
+             % dependence via chain rule
+             if strcmpi(impedance_type,'constkappa')
+                 h_upd_kappa = curvature_directional_der(src_info,h_upd(:));
+                 delta_lambda_rep = src_info.lamcfs(2)* ...
+                     repmat(h_upd_kappa(:),1,n_dir);
+                 bd_data_delta = bd_data_delta-1i*kh*delta_lambda_rep.*u;
+             end
          end
          
          if(strcmpi(bc.type,'t') || strcmpi(bc.type,'Transmission'))    
@@ -161,7 +169,7 @@ function [frechet_mats] = get_frechet_ders(kh,mats,src_info,sensor_info,fields,b
              end
              DFw_impedance(:,ivar) = DFw_col(induse); 
          end
-       else
+       elseif (strcmpi(impedance_type,'constkappa'))
          DFw_impedance = complex(zeros(m,2));
          for ivar=1:2
              if(ivar==1)
