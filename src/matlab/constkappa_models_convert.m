@@ -1,4 +1,4 @@
-function [ckcoefs,jac] = constkappa_models_convert(coefs,impedance_type)
+function [ckcoefs,jac] = constkappa_models_convert(coefs,impedance_type,kh)
 %CONSTKAPPA_MODELS_CONVERT helper function for impedance models of the
 % form 
 %
@@ -19,11 +19,14 @@ function [ckcoefs,jac] = constkappa_models_convert(coefs,impedance_type)
 %        impedance_type = 'antbar2' is a simpler model of Antoine-Barucq 
 %          type, with 2 coefficients where 
 %                     c1 = b2/sqrt(1+1i*b1)
-%                     c2 = 1/(1+1i*b1)
+%                     c2 = 1/(1+1i*b1)/kh
+%          NOTE: in the AB notation b1 = delta/omega and b2 = 1/c_r
 %        impedance_type = 'antbar3' is the full model of Antoine-Barucq 
 %          type, with 3 coefficients where 
 %                     c1 = b2*b3/sqrt(1+1i*b1)
-%                     c2 = b3/(1+1i*b1)
+%                     c2 = b3/(1+1i*b1)/kh
+%          NOTE: in the AB notation b1 = delta/omega, b2 = 1/c_r, and
+%                     b3 = 1/rho_r
 %
 % output:
 %
@@ -42,22 +45,22 @@ elseif strcmpi(impedance_type,'antbar2')
     aa = 1+1i*coefs(1);
     aasqrt = sqrt(aa);
     ckcoefs(1) = coefs(2)/aasqrt;
-    ckcoefs(2) = 1.0/aa;
+    ckcoefs(2) = 1.0/aa/kh;
     jac(1,1) = -0.5*1i*coefs(2)/(aa*aasqrt);
     jac(1,2) = 1.0/aasqrt;
-    jac(2,1) = -1.0*1i/(aa*aa);
+    jac(2,1) = -1.0*1i/(aa*aa)/kh;
     jac(2,2) = 0;
 elseif strcmpi(impedance_type,'antbar3')
     aa = 1+1i*coefs(1);
     aasqrt = sqrt(aa);
     ckcoefs(1) = coefs(2)*coefs(3)/aasqrt;
-    ckcoefs(2) = coefs(3)/aa;
+    ckcoefs(2) = coefs(3)/aa/kh;
     jac(1,1) = -0.5*1i*coefs(2)*coefs(3)/(aa*aasqrt);
     jac(1,2) = coefs(3)/aasqrt;
     jac(1,3) = coefs(2)/aasqrt;
-    jac(2,1) = -coefs(3)*1i/(aa*aa);
+    jac(2,1) = -coefs(3)*1i/(aa*aa)/kh;
     jac(2,2) = 0;
-    jac(2,3) = 1/aa;
+    jac(2,3) = 1/aa/kh;
 else
     error('unknown model selected');
 end

@@ -316,6 +316,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     opts_update_geom.rlam = rlam;
 
     opts_update_geom.impedance_type = impedance_type;
+    opts_update_geom.kh = kh;
     
     res = norm(rhs(:))/norm(u_meas.uscat_tgt(:));
     res0 = res;
@@ -540,7 +541,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                 src_out_gn.lamcfs(1:length(delta_imp_gn)) = ...
                     src_out_gn.lamcfs(1:length(delta_imp_gn)) + delta_imp_gn(:);
                 ckcoefs = constkappa_models_convert(src_out_gn.lamcfs,...
-                    impedance_type);
+                    impedance_type,kh);
                 src_out_gn.lambda(:) = [ones(n,1) src_out.H(:)]*ckcoefs;
                 [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);
                 fields_out_gn = rla.compute_fields(kh,src_out_gn,mats_out_gn,u_meas,bc,opts);
@@ -645,7 +646,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                 n = length(src_out.xs);
                 src_out_sd.lamcfs(:) = src_out_sd.lamcfs(:) + delta_imp_sd(:);
                 ckcoefs = constkappa_models_convert(src_out_sd.lamcfs,...
-                    impedance_type);
+                    impedance_type,kh);
                 src_out_sd.lambda(:) = [ones(n,1) src_out.H(:)]*ckcoefs;
         
                 [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
