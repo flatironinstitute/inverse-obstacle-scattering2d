@@ -177,9 +177,12 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
                 
                 kk = [(0:(n/2)) ((-n/2+1):-1)];
                 src_out.lambda = exp(1i*2*pi*tt_use*kk)*(lambda_hat(:)/n);
-            elseif (strcmpi(impedance_type,'constkappa'))
-                src_out.lambda = src_info.lamcfs(1) +  ...
-                    src_info.lamcfs(2)*src_out.H;
+            elseif (strcmpi(impedance_type,'constkappa') || ...
+                    strcmpi(impedance_type,'antbar2') || ...
+                    strcmpi(impedance_type,'antbar3'))
+                ckcfs = constkappa_models_convert(src_info.lamcfs,...
+                    impedance_type);
+                src_out.lambda = ckcfs(1) +  ckcfs(2)*src_out.H;
                 src_out.lamcfs = src_info.lamcfs;
             end
         end

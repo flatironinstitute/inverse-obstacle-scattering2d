@@ -247,7 +247,7 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
         end
         
         if ( (strcmpi(bc.invtype,'i') && ierimp(iter)~= 0) || ...
-             (strcmpi(bc.invtype,'o') && ier(iter)~= 0)   || ...
+             ((strcmpi(bc.invtype,'o') || strcmpi(bc.invtype,'io-vp'))  && ier(iter)~= 0)   || ...
              ( (strcmpi(bc.invtype,'io') || strcmpi(bc.invtype,'oi') )  && (ier(iter)~= 0 && ierimp(iter)~=0)))
             exit_criterion = -1;
             break;
@@ -303,6 +303,9 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
     if(verbose)
       fprintf('Completing inverse interation for frequency kh: %d\n',kh);
       fprintf('-------------------------------------\n');
+      plot(src_info_out.xs,src_info_out.ys,'r--')
+      title(sprintf('kh = %7.4e\n',kh))
+      drawnow
     end
     
 end

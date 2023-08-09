@@ -172,10 +172,23 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
    n = length(src_info.xs);
    if(isempty(lam_init))
        src_info.lambda = ones(n,1);
+       if isfield(opts,'impedance_type')
+           if strcmpi(opts.impedance_type,'constkappa')
+                src_info.lamcfs = [1;0];
+           elseif strcmpi(opts.impedance_type,'antbar2')
+                src_info.lamcfs = [0;1];
+           elseif strcmpi(opts.impedance_type,'antbar3')
+                src_info.lamcfs = [0;1;1];
+           end
+       end
    elseif (isa(lam_init,'function_handle'))
        % fix this initialization
        t = 0:2*pi/n:2*pi*(1-1/n);
        src_info.lambda = lam_init(t(:));
+   elseif (length(lam_init) == 2 || length(lam_init) == 3)
+       src_info.lamcfs = lam_init(:);
+       ckcfs = constkappa_models_convert(src_info.lamcfs,opts.impedance_type);
+       src_info.lambda = ones(n,1)*ckcfs(1) + src_info.H(:)*ckcfs(2);
    else
        src_info.lambda = lam_init(:);
    end

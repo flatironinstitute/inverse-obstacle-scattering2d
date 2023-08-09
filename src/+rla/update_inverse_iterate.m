@@ -73,7 +73,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
 %            opts.impedance_type = 'fourier')
 %      src_info.lamcfs - imepedance coefficients in constant + kappa model
 %           (only if solving impedance boundary value problem with
-%            opts.impedance_type = 'constkappa')
+%            opts.impedance_type = 'constkappa') or one of the
+%            antoine-barucq type models ('antbar2','antbar3')
 %   mats - matrix structure
 %    mats.Fw_mat - Matrix corresponding to discretizing the boundary
 %    integral equation
@@ -149,6 +150,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
 %             terms used 
 %             "constkappa" - a function of the form c1 + c2*kappa is used, 
 %             where kappa is the signed curvature     
+%             "antbar" - a function of the form c1 + c2*kappa is used, 
+%             where kappa is the signed curvature     
 %      opts.nppw: points per wavelength for discretizing updated curve (10)
 %      opts.verbose: flag for displaying verbose messages during run
 %      (false)
@@ -210,6 +213,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     if(isfield(opts,'lambdareal'))
         lambdareal = opts.lambdareal;
     end
+
+    if (strcmpi(impedance_type,'antbar2') || strcmpi(impedance_type,'antbar3'))
+        if ~lambdareal
+            warning('for antbar models, lambda is real. overriding...')
+            lambdareal = true;
+        end
+    end
+
     opts_use.lambdareal = lambdareal;
     
     constphasefactor = false;
@@ -235,10 +246,24 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     if(isfield(optim_opts,'optim_type'))
         optim_type = optim_opts.optim_type;
     end
+
+    if (strcmpi(optim_type,'min(gn,sd)') || ...
+            strcmpi(optim_type,'min(sd,gn)'))
+        optim_list = {'gn','sd'};
+    else
+        optim_list = {optim_type};
+    end
     
     filter_type = 'gauss-conv';
     if(isfield(optim_opts,'filter_type'))
         filter_type = optim_opts.filter_type;
+    end
+
+    if (strcmpi(filter_type,'min(step_length,gauss-conv)') || ...
+            strcmpi(filter_type,'min(gauss-conv,step_length)'))
+        filter_list = {'gauss-conv','step_length'};
+    else
+        filter_list = {filter_type};
     end
     
     maxit_filter = 10;
@@ -293,6 +318,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     opts_update_geom.impedance_type = impedance_type;
     
     res = norm(rhs(:))/norm(u_meas.uscat_tgt(:));
+    res0 = res;
     src_out = src_info;
     mats_out = mats;
     fields_out = fields;
@@ -304,174 +330,97 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     if(strcmpi(bc.invtype,'o') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io'))
         deltas.nmodes_bdry = opts_use.ncoeff_boundary;
         
-        if(strcmpi(optim_type,'gn') || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
-            delta_bdry_gn = Minv \ [real(rhs(:)); imag(rhs(:))];
-            delta_bdry_gn0 = delta_bdry_gn;
-            ier_gn = 10;
-            iter_filter_bdry_gn = -1;
-            for iter=1:maxit_filter
-                [src_out_gn,ier_gn] = rla.update_geom(src_info,ncoeff_boundary,delta_bdry_gn,opts_update_geom);
-                [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);
-                fields_out_gn = rla.compute_fields(kh,src_out_gn,mats_out_gn,u_meas,bc,opts);
-                if (constphasefactor)
-                    phase = optimal_const_and_jacobian( ... 
-                        u_meas.uscat_tgt(:), fields_out_gn.uscat_tgt(:));
-                else
-                    phase = 1;
-                end
-                rhs_gn = u_meas.uscat_tgt(:) - phase*fields_out_gn.uscat_tgt(:);
-                res_gn = norm(rhs_gn(:))/norm(u_meas.uscat_tgt(:));
-                
-                if(ier_gn == 0 && res_gn <= res) 
-                    iter_filter_bdry_gn = iter-1;
-                    break
-                else
-                    if(strcmpi(filter_type,'gauss-conv'))
-                        sigma_bd = 1.0/10^(iter-1);
-                        hg = 2/(2*ncoeff_boundary);
-                        N_var = ncoeff_boundary;
-                        tg = -1:hg:1;
-                        gauss_val = exp(-tg.*tg/sigma_bd);
-                        gauss_new = zeros(1,length(gauss_val));
-                        gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
-                        gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
-                        delta_bdry_gn = (delta_bdry_gn0.'.*gauss_new).';
-                    elseif(strcmpi(filter_type,'step_length'))
-                        delta_bdry_gn = delta_bdry_gn0/(2^(iter));
-                    end
-                end
-            end
-            
-            if(iter_filter_bdry_gn == -1)
-                iter_filter_bdry_gn = maxit_filter;
-            end
-            
-            if(verbose)
-                fprintf('Post gn filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type,iter_filter_bdry_gn,ier_gn);
-            end
-            if(ier_gn ~=0)
-                mats_out_gn = mats;
-                fields_out_gn = fields;
-                src_out_gn = src_out;
-                res_gn = res;    
-            end
-            
-            if(res_gn >= res)
-                mats_out_gn = mats;
-                fields_out_gn = fields;
-                src_out_gn = src_out;
-                res_gn = res;
-                ier_gn = -5;
-            end
-        end
-        if(strcmpi(optim_type,'sd')  || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
-            delta_bdry_sd = Minv'*[real(rhs(:)); imag(rhs(:))];
-            t = delta_bdry_sd'*delta_bdry_sd/norm(Minv*delta_bdry_sd)^2;
-            delta_bdry_sd = t*delta_bdry_sd;
-            delta_bdry_sd0 = delta_bdry_sd;
-            iter_filter_bdry_sd = -1;
-            ier_sd = 10;
-            for iter=1:maxit_filter
-                [src_out_sd,ier_sd] = rla.update_geom(src_info,ncoeff_boundary,delta_bdry_sd,opts_update_geom);
-                [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
-                fields_out_sd = rla.compute_fields(kh,src_out_sd,mats_out_sd,u_meas,bc,opts);
-                if (constphasefactor)
-                    phase = optimal_const_and_jacobian( ... 
-                        u_meas.uscat_tgt(:), fields_out_sd.uscat_tgt(:));
-                else
-                    phase = 1;
-                end
-                rhs_sd = u_meas.uscat_tgt(:) - phase*fields_out_sd.uscat_tgt(:);
-                res_sd = norm(rhs_sd(:))/norm(u_meas.uscat_tgt(:));
-                if(ier_sd == 0 && res_sd<=res) 
-                    iter_filter_bdry_sd = iter-1;
-                    break
-                else
-                    if(strcmpi(filter_type,'gauss-conv'))
-                        sigma_bd = 1.0/10^(iter-1);
-                        hg = 2/(2*ncoeff_boundary);
-                        N_var = ncoeff_boundary;
-                        tg = -1:hg:1;
-                        gauss_val = exp(-tg.*tg/sigma_bd);
-                        gauss_new = zeros(1,length(gauss_val));
-                        gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
-                        gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
-                        delta_bdry_sd = (delta_bdry_sd0.'.*gauss_new).';
-                    elseif(strcmpi(filter_type,'step_length'))
-                        delta_bdry_sd = delta_bdry_sd0/(2^(iter));
-                    end
-                end
-            end
-            if(iter_filter_bdry_sd == -1)
-                iter_filter_bdry_sd = maxit_filter;
-            end
-               
-            
-            if(verbose)
-                fprintf('Post sd filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type,iter_filter_bdry_sd,ier_sd);
-            end
-            
-            if(ier_sd ~=0)
-                mats_out_sd = mats;
-                fields_out_sd = fields;
-                src_out_sd  = src_out;
-                res_sd = res;
-            end
-            
-            if(res_sd >= res)
-                mats_out_sd = mats;
-                fields_out_sd = fields;
-                src_out_sd = src_out;
-                res_sd = res;
-                ier_sd = -5;
-            end
-        end
+        ier_obs = -5;
         
-        
-        if(strcmpi(optim_type,'gn'))
-            deltas.iter_type = 'gn';
-        elseif(strcmpi(optim_type,'sd'))
-            deltas.iter_type = 'sd';
-        elseif(strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
-            if(res_gn < res_sd)
-                deltas.iter_type = 'gn';
+        % loop over optimization methods
+        for ioptim = 1:length(optim_list)
+            optim_type0 = optim_list{ioptim};
+            if (strcmpi(optim_type0,'gn'))
+                delta_bdry = Minv \ [real(rhs(:)); imag(rhs(:))];
+                delta_bdry0 = delta_bdry;
+            elseif (strcmpi(optim_type0,'sd'))
+                delta_bdry = Minv'*[real(rhs(:)); imag(rhs(:))];
+                t = delta_bdry'*delta_bdry/norm(Minv*delta_bdry)^2;
+                delta_bdry = t*delta_bdry;
+                delta_bdry0 = delta_bdry;
             else
-                deltas.iter_type = 'sd';
+                error('unknown optimization type %s',optim_type0);
             end
-            
-            fprintf('optimization method used = %s\n',deltas.iter_type);
-        end
-        
-        if(strcmpi(deltas.iter_type,'gn'))
-            deltas.delta_bdry = delta_bdry_gn;
-            deltas.iter_filter_bdry = iter_filter_bdry_gn;
-            mats_out = mats_out_gn;
-            fields_out = fields_out_gn;
-            
-            
-            ier_obs = ier_gn;
-            src_out = src_out_gn;
-            res = res_gn;
-        elseif(strcmpi(deltas.iter_type,'sd'))
-            deltas.delta_bdry = delta_bdry_sd;
-            deltas.iter_filter_bdry = iter_filter_bdry_sd;
-            
-            mats_out = mats_out_sd;
-            fields_out = fields_out_sd;
-            ier_obs = ier_sd;
-            src_out = src_out_sd;
-            res = res_sd;
-        end      
 
-        if (constphasefactor)
-            phase = optimal_const_and_jacobian( ... 
-            u_meas.uscat_tgt(:), fields_out.uscat_tgt(:));
-            deltas.phase = phase;
-        else
-            deltas.phase = 1;
+            % loop over filtration strategies
+            for ifilt = 1:length(filter_list)
+                filter_type0 = filter_list{ifilt};
+                iter_filter_bdry_tmp = -1;
+
+                for iter=1:maxit_filter
+                    [src_out_tmp,ier_tmp] = rla.update_geom(src_info,ncoeff_boundary,delta_bdry,opts_update_geom);
+                    [mats_out_tmp] = rla.get_fw_mats(kh,src_out_tmp,bc,u_meas,opts);
+                    fields_out_tmp = rla.compute_fields(kh,src_out_tmp,mats_out_tmp,u_meas,bc,opts);
+                    if (constphasefactor)
+                        phase = optimal_const_and_jacobian( ... 
+                            u_meas.uscat_tgt(:), fields_out_tmp.uscat_tgt(:));
+                    else
+                        phase = 1;
+                    end
+                    rhs_tmp = u_meas.uscat_tgt(:) - phase*fields_out_tmp.uscat_tgt(:);
+                    res_tmp = norm(rhs_tmp(:))/norm(u_meas.uscat_tgt(:));
+                
+                    if(ier_tmp == 0 && res_tmp <= res0) 
+                        iter_filter_bdry_tmp = iter-1;
+                        break
+                    else
+                        if(strcmpi(filter_type0,'gauss-conv'))
+                            sigma_bd = 1.0/10^(iter-1);
+                            hg = 2/(2*ncoeff_boundary);
+                            N_var = ncoeff_boundary;
+                            tg = -1:hg:1;
+                            gauss_val = exp(-tg.*tg/sigma_bd);
+                            gauss_new = zeros(1,length(gauss_val));
+                            gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
+                            gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
+                            delta_bdry = (delta_bdry0.'.*gauss_new).';
+                        elseif(strcmpi(filter_type0,'step_length'))
+                            delta_bdry = delta_bdry0/(2^(iter));
+                        else
+                            error('unknown filter type %s',filter_type0);
+                        end
+                    end
+                end
+                if (iter_filter_bdry_tmp == -1)
+                    iter_filter_bdry_tmp = maxit_filter;
+                end
+                if(verbose)
+                    fprintf(['Post %s filter: Filter type: %s \t ', ...
+                         'filter iteration count: %d \t ier: %d\n'], ...
+                         optim_type0,filter_type0,iter_filter_bdry_tmp,ier_tmp);
+                end
+
+                if res_tmp < res
+                    mats_out = mats_out_tmp;
+                    src_out = src_out_tmp;
+                    fields_out = fields_out_tmp;
+                    res = res_tmp;
+                    ier_obs = 0;
+                    deltas.delta_bdry = delta_bdry;
+                    deltas.iter_filter_bdry = iter_filter_bdry_tmp;
+                    deltas.filter_type = filter_type0;
+                    deltas.iter_type = optim_type0;
+                    deltas.phase = phase;
+                end
+
+            end
         end
-        
-        
+
+        if verbose
+            if ier_obs == 0
+                msg = ['Post update geometry. Success. Used optim type: %s ' ...
+                    '\t filter type: %s\n'];
+                fprintf(msg,deltas.iter_type,deltas.filter_type)
+            else
+                msg = ['Post update geometry. Failed to update\n'];
+                fprintf(msg);
+            end
+        end
     end
     
     % Now update impedance holding boundary fixed
@@ -482,6 +431,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
             fprintf('Inside update iterate, kh = %d, ncoeff_impedance=%d \n',kh,ncoeff_impedance);
         else
             fprintf('Inside update iterate, kh = %d, fitting constant plus curvature impedance\n',kh);
+            disp(src_out.lamcfs)
         end
 
         bc_use = [];
@@ -490,7 +440,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
         
         frechet_mats = rla.get_frechet_ders(kh,mats_out,src_out,u_meas, ...
           fields_out,bc_use,opts_use);
-      
+
         if (constphasefactor)
             [phase,Minv,Minvbar] = optimal_const_and_jacobian( ...
                 u_meas.uscat_tgt(:),fields.uscat_tgt(:),...
@@ -512,7 +462,18 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
         end
         if(strcmpi(optim_type,'gn') || strcmpi(optim_type,'min(sd,gn)') ...
                 || strcmpi(optim_type,'min(gn,sd)'))
-            delta_imp_gn = Minv\rhs;
+
+            if (strcmpi(impedance_type,'constkappa') && cond(frechet_mats.impedance) > 10)
+                % if ill conditioned, revert to steepest descent
+                delta_imp_gn = Minv'*rhs;
+                t = delta_imp_gn'*delta_imp_gn/norm(Minv*delta_imp_gn)^2;
+                delta_imp_gn = t*delta_imp_gn;
+                fprintf(['bad basis for impedance, switching ', ...
+                        'to sd...\n'])
+            else
+                delta_imp_gn = Minv\rhs;
+            end
+
             if (~lambdareal)
                 delta_imp_gn = delta_imp_gn(1:end/2) + ...
                     1i*delta_imp_gn(end/2+1:end);   
@@ -546,14 +507,14 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                     phase = 1;
                 end
                 
-                rhs_gn = u_meas.uscat_tgt(:) - phase*fields_out_gn.uscat_tgt(:);
-                res_imp_gn = norm(rhs_gn(:))/norm(u_meas.uscat_tgt(:));
+                rhs = u_meas.uscat_tgt(:) - phase*fields_out_gn.uscat_tgt(:);
+                res_imp_gn = norm(rhs(:))/norm(u_meas.uscat_tgt(:));
                 
                 if(res_imp_gn <= res) 
                     iter_filter_imp_gn = iter-1;
                     break
                 else
-                    if(strcmpi(filter_type,'gauss-conv'))
+                    if(strcmpi(filter_type0,'gauss-conv'))
                         sigma_bd = 1.0/10^(iter-1);
                         hg = 2/(2*ncoeff_impedance);
                         N_var = ncoeff_impedance;
@@ -563,19 +524,24 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                         gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
                         gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
                         delta_imp_gn = (delta_imp_gn0.'.*gauss_new).';
-                    elseif(strcmpi(filter_type,'step_length'))
+                    elseif(strcmpi(filter_type0,'step_length'))
                         delta_imp_gn = delta_imp_gn0/(2^(iter));
                     end
                 end
             end
             
-            else 
+            elseif ( strcmpi(impedance_type,'constkappa') || ...
+                    strcmpi(impedance_type,'antbar2') || ...
+                    strcmpi(impedance_type,'antbar3') )
                 for iter=1:maxit_filter
                 
                 src_out_gn = src_out;
                 n = length(src_out.xs);
-                src_out_gn.lamcfs(:) = src_out_gn.lamcfs(:) + delta_imp_gn(:);
-                src_out_gn.lambda(:) = [ones(n,1) src_out.H(:)]*src_out_gn.lamcfs(:);
+                src_out_gn.lamcfs(1:length(delta_imp_gn)) = ...
+                    src_out_gn.lamcfs(1:length(delta_imp_gn)) + delta_imp_gn(:);
+                ckcoefs = constkappa_models_convert(src_out_gn.lamcfs,...
+                    impedance_type);
+                src_out_gn.lambda(:) = [ones(n,1) src_out.H(:)]*ckcoefs;
                 [mats_out_gn] = rla.get_fw_mats(kh,src_out_gn,bc,u_meas,opts);
                 fields_out_gn = rla.compute_fields(kh,src_out_gn,mats_out_gn,u_meas,bc,opts);
                 if (constphasefactor)
@@ -585,8 +551,8 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                     phase = 1;
                 end
                 
-                rhs_gn = u_meas.uscat_tgt(:) - phase*fields_out_gn.uscat_tgt(:);
-                res_imp_gn = norm(rhs_gn(:))/norm(u_meas.uscat_tgt(:));
+                rhs_imp_gn = u_meas.uscat_tgt(:) - phase*fields_out_gn.uscat_tgt(:);
+                res_imp_gn = norm(rhs_imp_gn(:))/norm(u_meas.uscat_tgt(:));
                 if(res_imp_gn <= res) 
                     iter_filter_imp_gn = iter-1;
                     break
@@ -609,11 +575,9 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                 ier_imp_gn = -5;
             end
             if(verbose)
-                fprintf('Post gn filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type,iter_filter_imp_gn,ier_imp_gn);
+                fprintf('Post gn filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type0,iter_filter_imp_gn,ier_imp_gn);
             end
                         
-            
-            
         end
         if(strcmpi(optim_type,'sd')  || strcmpi(optim_type,'min(sd,gn)') || strcmpi(optim_type,'min(gn,sd)'))
             delta_imp_sd = Minv'*rhs;
@@ -657,7 +621,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                     iter_filter_imp_sd = iter-1;
                     break
                 else
-                    if(strcmpi(filter_type,'gauss-conv'))
+                    if(strcmpi(filter_type0,'gauss-conv'))
                         sigma_bd = 1.0/10^(iter-1);
                         hg = 2/(2*ncoeff_impedance);
                         N_var = ncoeff_impedance;
@@ -667,18 +631,22 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                         gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
                         gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
                         delta_imp_sd = (delta_imp_sd0.'.*gauss_new).';
-                    elseif(strcmpi(filter_type,'step_length'))
+                    elseif(strcmpi(filter_type0,'step_length'))
                         delta_imp_sd = delta_imp_sd0/(2^(iter));
                     end
                 end
             end
-            else
+            elseif ( strcmpi(impedance_type,'constkappa') || ...
+                    strcmpi(impedance_type,'antbar2') || ...
+                    strcmpi(impedance_type,'antbar3') )
                 for iter=1:30
                 
                 src_out_sd = src_out;
                 n = length(src_out.xs);
                 src_out_sd.lamcfs(:) = src_out_sd.lamcfs(:) + delta_imp_sd(:);
-                src_out_sd.lambda(:) = [ones(n,1) src_out.H(:)]*src_out_sd.lamcfs(:);
+                ckcoefs = constkappa_models_convert(src_out_sd.lamcfs,...
+                    impedance_type);
+                src_out_sd.lambda(:) = [ones(n,1) src_out.H(:)]*ckcoefs;
         
                 [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
                 fields_out_sd = rla.compute_fields(kh,src_out_sd,mats_out_sd,u_meas,bc,opts);
@@ -709,7 +677,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
                 ier_imp_sd = -5;
             end
             if(verbose)
-                fprintf('Post sd filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type,iter_filter_imp_sd,ier_imp_sd);
+                fprintf('Post sd filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type0,iter_filter_imp_sd,ier_imp_sd);
             end
             
         end
@@ -761,4 +729,209 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
         
     end 
     
+
+    %
+    % EXPERIMENTAL VARIABLE PROJECTION APPROACH
+    %
+
+    if(strcmpi(bc.invtype,'io-vp'))
+
+        assert(strcmpi(impedance_type,'constkappa'),'only constkappa implemented');
+
+
+        deltas.nmodes_bdry = opts_use.ncoeff_boundary;
+        
+        nstep_inner = 10;
+
+        fprintf('variable projection approach with %d inner solves per filter\n',nstep_inner);
+
+        delta_bdry_sd = Minv'*[real(rhs(:)); imag(rhs(:))];
+        t = delta_bdry_sd'*delta_bdry_sd/norm(Minv*delta_bdry_sd)^2;
+        delta_bdry_sd = t*delta_bdry_sd;
+        delta_bdry_sd0 = delta_bdry_sd;
+        iter_filter_bdry_sd = -1;
+        ier_sd = 10;
+        for iter=1:maxit_filter
+            [src_out_sd,ier_sd] = rla.update_geom(src_info,ncoeff_boundary,delta_bdry_sd,opts_update_geom);
+            [mats_out_sd] = rla.get_fw_mats(kh,src_out_sd,bc,u_meas,opts);
+            fields_out_sd = rla.compute_fields(kh,src_out_sd,mats_out_sd,u_meas,bc,opts);
+            if (constphasefactor)
+                phase = optimal_const_and_jacobian( ... 
+                    u_meas.uscat_tgt(:), fields_out_sd.uscat_tgt(:));
+            else
+                phase = 1;
+            end
+            rhs_sd = u_meas.uscat_tgt(:) - phase*fields_out_sd.uscat_tgt(:);
+            res_sd = norm(rhs_sd(:))/norm(u_meas.uscat_tgt(:));
+
+            if (ier_sd == 0)
+                % do inner iterations if there were no geometric issues
+
+                fprintf('starting inner solves, res_sd %7.4e res %7.4e\n',res_sd,res);
+
+                for jinner = 1:nstep_inner
+                    bc_use = [];
+                    bc_use.type = bc.type;
+                    bc_use.invtype = 'i';
+        
+                    frechet_mats = rla.get_frechet_ders(kh,mats_out_sd,src_out_sd,u_meas, ...
+                        fields_out_sd,bc_use,opts_use);
+
+                    if (constphasefactor)
+                     [phase,Minv,Minvbar] = optimal_const_and_jacobian( ...
+                            u_meas.uscat_tgt(:),fields.uscat_tgt(:),...
+                            frechet_mats.impedance);
+                    else
+                        phase = 1;
+                        Minv = frechet_mats.impedance;
+                        Minvbar = zeros(size(Minv));
+                    end
+            
+                    rhs = u_meas.uscat_tgt(:) - phase*fields_out.uscat_tgt(:);
+                    if (lambdareal)
+                        Minv = [real(Minv+Minvbar); imag(Minv+Minvbar)];
+                        rhs = [real(rhs(:)); imag(rhs(:))];
+                    else
+                        Minv = [real(Minv+Minvbar), imag(Minvbar-Minv); ...
+                            imag(Minv+Minvbar), real(Minv-Minvbar)];
+                        rhs = [real(rhs(:)); imag(rhs(:))];
+                    end
+    
+                    % mostly try for gn but 
+                    % check if basis ill conditioned..
+                    if (cond(frechet_mats.impedance) > 10^1)
+                        % if ill conditioned, revert to steepest descent
+                        delta_imp = Minv'*rhs;
+                        t = delta_imp'*delta_imp/norm(Minv*delta_imp)^2;
+                        delta_imp = t*delta_imp;
+                        if (~lambdareal)
+                            delta_imp =  delta_imp(1:end/2) + ...
+                            1i*delta_imp(end/2+1:end);   
+                        end
+                        fprintf(['bad basis for impedance, switching ', ...
+                            'to sd...\n'])
+                    else
+                        delta_imp = Minv\rhs;
+                    end
+      
+
+                    if (~lambdareal)
+                        delta_imp = delta_imp(1:end/2) + ...
+                            1i*delta_imp(end/2+1:end);   
+                    end
+                    delta_imp0 = delta_imp;
+                
+                    for iter_in=1:maxit_filter
+                    
+                        src_out_inner = src_out_sd;
+                        n = length(src_out_inner.xs);
+                        src_out_inner.lamcfs(1:length(delta_imp)) = ...
+                            src_out_inner.lamcfs(1:length(delta_imp)) + delta_imp(:);
+                        src_out_inner.lambda(:) = [ones(n,1) src_out_inner.H(:)]*src_out_inner.lamcfs(:);
+                        [mats_out_inner] = rla.get_fw_mats(kh,src_out_inner,bc,u_meas,opts);
+                        fields_out_inner = rla.compute_fields(kh,src_out_inner,mats_out_inner,u_meas,bc,opts);
+                        if (constphasefactor)
+                            phase = optimal_const_and_jacobian( ... 
+                             u_meas.uscat_tgt(:), fields_out_inner.uscat_tgt(:));
+                        else
+                            phase = 1;
+                        end
+                    
+                        rhs_inner = u_meas.uscat_tgt(:) - phase*fields_out_inner.uscat_tgt(:);
+                        res_inner = norm(rhs_inner(:))/norm(u_meas.uscat_tgt(:));
+                        if(res_inner < res_sd) 
+                            break
+                        else
+                            % only step length filtering for 2 term lambda
+                            delta_imp = delta_imp0/(2^(iter_in));
+                        end
+                    end
+                    if(res_inner < res_sd)
+                        src_out_sd = src_out_inner;
+                        mats_out_sd = mats_out_inner;
+                        fields_out_sd = fields_out_inner;
+                        res_sd = res_inner;
+                    else
+                        break
+                    end
+
+                end
+
+                fprintf('after inner solves, res_sd %7.4e, res %7.4e\n',res_sd,res)                
+                        
+            end
+            if(ier_sd == 0 && res_sd<=res) 
+                iter_filter_bdry_sd = iter-1;
+                break
+            else
+                if(strcmpi(filter_type0,'gauss-conv'))
+                    sigma_bd = 1.0/10^(iter-1);
+                    hg = 2/(2*ncoeff_boundary);
+                    N_var = ncoeff_boundary;
+                    tg = -1:hg:1;
+                    gauss_val = exp(-tg.*tg/sigma_bd);
+                    gauss_new = zeros(1,length(gauss_val));
+                    gauss_new(1:N_var+1) = gauss_val(N_var+1:end);
+                    gauss_new(N_var+2:end) = gauss_val(N_var:-1:1);
+                    delta_bdry_sd = (delta_bdry_sd0.'.*gauss_new).';
+                elseif(strcmpi(filter_type0,'step_length'))
+                    delta_bdry_sd = delta_bdry_sd0/(2^(iter));
+                end
+            end
+        end
+
+        if(iter_filter_bdry_sd == -1)
+            iter_filter_bdry_sd = maxit_filter;
+        end
+                           
+        if(verbose)
+            fprintf('Post sd filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type0,iter_filter_bdry_sd,ier_sd);
+        end
+            
+        if(ier_sd ~=0)
+            mats_out_sd = mats;
+            fields_out_sd = fields;
+            src_out_sd  = src_out;
+            res_sd = res;
+        end
+            
+        if(res_sd >= res)
+            fprintf('here res_sd = %5.2e res = %5.2e\n',res_sd,res)
+            mats_out_sd = mats;
+            fields_out_sd = fields;
+            src_out_sd = src_out;
+            res_sd = res;
+            ier_sd = -5;
+        end
+
+        deltas.iter_type = 'sd';
+
+        deltas.delta_bdry = delta_bdry_sd;
+        deltas.iter_filter_bdry = iter_filter_bdry_sd;
+            
+        mats_out = mats_out_sd;
+        fields_out = fields_out_sd;
+        ier_obs = ier_sd;
+        src_out = src_out_sd;
+        res = res_sd;
+
+        if (constphasefactor)
+            phase = optimal_const_and_jacobian( ... 
+            u_meas.uscat_tgt(:), fields_out.uscat_tgt(:));
+            deltas.phase = phase;
+        else
+            deltas.phase = 1;
+        end
+
+        if(verbose)
+            fprintf('Post sd filter: Filter type: %s \t filter iteration count: %d \t ier: %d\n',filter_type0,iter_filter_bdry_sd,ier_sd);
+            disp(src_out.lamcfs)
+        end        
+            
+    % end of io-vp section        
+    end
+
+ 
+% end of function        
 end
+                
