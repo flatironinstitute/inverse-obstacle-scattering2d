@@ -128,7 +128,7 @@ function fields = compute_fields(kh,src_info,mats,sensor_info,bc,opts)
 
    if(strcmpi(bc.type,'t') || strcmpi(bc.type,'Transmission'))
      a = bc.transa; b = bc.transb; zks = bc.transk;
-     q = 0.5*(a(1)/a(2) + a(2)/b(2));
+     q = 0.5*(a(1)/b(1) + a(2)/b(2));
      n1 = numel(xs);
      bd_data = zeros(2*n1,n_dir,'like',1.0+1i);
      bd_data(1:2:end,:) = -a(2)*fields.uinc/q;
