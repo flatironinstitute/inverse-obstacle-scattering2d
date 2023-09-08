@@ -183,7 +183,7 @@ function [src_out,varargout] = update_geom(src_info,nh,hcoefs,opts)
                 kh = opts.kh;
                 ckcfs = constkappa_models_convert(src_info.lamcfs,...
                     impedance_type,kh);
-                src_out.lambda = ckcfs(1) +  ckcfs(2)*src_out.H;
+                src_out.lambda = ckcfs(1) +  ckcfs(2)*src_out.H(:);
                 src_out.lamcfs = src_info.lamcfs;
             end
         end

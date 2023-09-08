@@ -276,6 +276,15 @@ function [inverse_sol_data,src_info_out] = inverse_solver(kh,src_info,bc, ...
             exit_criterion = 2;
             break;
         end
+
+        if (iter > 1)
+            if (res_all(iter) >= (1-eps_upd)*res_all(iter-1))
+                exit_criterion = 4;
+                break;
+            end
+        end
+
+
         ict = ict + 1;
     end
     if(ict == (maxit +1)) 

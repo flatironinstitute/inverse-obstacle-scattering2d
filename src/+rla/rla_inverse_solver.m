@@ -175,10 +175,19 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
        if isfield(opts,'impedance_type')
            if strcmpi(opts.impedance_type,'constkappa')
                 src_info.lamcfs = [1;0];
+                ckcoefs = constkappa_models_convert(src_info.lamcfs,...
+                    opts.impedance_type,u_meas{ik_list(1)}.kh);
+                src_info.lambda = ckcoefs(1) + ckcoefs(2)*src_info.H(:);
            elseif strcmpi(opts.impedance_type,'antbar2')
                 src_info.lamcfs = [0;1];
+                ckcoefs = constkappa_models_convert(src_info.lamcfs,...
+                    opts.impedance_type,u_meas{ik_list(1)}.kh);
+                src_info.lambda = ckcoefs(1) + ckcoefs(2)*src_info.H(:);
            elseif strcmpi(opts.impedance_type,'antbar3')
                 src_info.lamcfs = [0;1;1];
+                ckcoefs = constkappa_models_convert(src_info.lamcfs,...
+                    opts.impedance_type,u_meas{ik_list(1)}.kh);
+                src_info.lambda = ckcoefs(1) + ckcoefs(2)*src_info.H(:);
            end
        end
    elseif (isa(lam_init,'function_handle'))
@@ -199,6 +208,15 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
           if(opts.use_lscaled_modes)
              opts.ncoeff_boundary_mult = 2*src_info.L/2/pi;
           end
+       end
+       if(isfield(opts,'impedance_type'))
+           if strcmpi(opts.impedance_type,'antbar2') || strcmpi(opts.impedance_type,'antbar3')
+               % need to update lambda when you change frequency in these
+               % models
+                ckcoefs = constkappa_models_convert(src_info.lamcfs,...
+                    opts.impedance_type,kh);
+                src_info.lambda = ckcoefs(1) + ckcoefs(2)*src_info.H(:);
+           end
        end
        [inv_data_all{i},src_out] = rla.inverse_solver(kh,src_info,bc, ...
           u_meas{ik_list(i)},optim_opts,opts);
