@@ -486,7 +486,7 @@ function [deltas,src_out,mats_out,fields_out,res,ier_obs,ier_imp] = ...
     % Now update impedance holding boundary fixed
     
     if((strcmpi(bc.invtype,'i') || strcmpi(bc.invtype,'oi') || strcmpi(bc.invtype,'io')) && ...
-            (ncoeff_impedance>=0 || strcmpi(impedance_type,'constkappa')))
+            ( strcmpi(bc.type,'Impedance') || strcmpi(bc.type,'i') ))
         res0 = res;
         for jinner = 1:ninner
             ier_imp = -5;
