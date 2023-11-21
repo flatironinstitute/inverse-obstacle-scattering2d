@@ -434,5 +434,53 @@ function ipass = test_frechet_ders()
         fprintf('failed Impedance test impedance in frechet_ders test (antbar3): %d\n',errs(2));
     end
     
+    % Test impedance frechet derivative of impedance problem
+    % impedance_type = antbarphys
+    
+    opts.impedance_type = 'antbarphys';
+
+    hcoefs =  0.1*rand(3,1);
+    src_info.lamcfs = [1.3;0.7;0.4];
+
+    ckcfs = constkappa_models_convert(src_info.lamcfs,opts.impedance_type,kh);
+    src_info.lambda = ckcfs(1) + ckcfs(2)*src_info.H;
+    bc = [];
+    bc.type = 'Impedance';
+    bc.invtype = 'oi';
+    
+    [mats,~] = rla.get_fw_mats(kh,src_info,bc,sensor_info,opts);
+    fields = rla.compute_fields(kh,src_info,mats,sensor_info,bc,opts);
+    frechet_mats = rla.get_frechet_ders(kh,mats,src_info,sensor_info,fields,bc,opts);
+
+    uder = frechet_mats.impedance*hcoefs(:);
+    errs = zeros(2,1);
+
+    for ig=1:2
+        dh = 10^(-ig);
+        hcoefs_use = dh*hcoefs;
+        hcoefs_use = hcoefs_use(:);
+        src_out = src_info;
+        src_out.lamcfs = src_out.lamcfs(:) + hcoefs_use(:);
+        ckcfs = constkappa_models_convert(src_out.lamcfs,opts.impedance_type,kh);
+        src_out.lambda = ckcfs(1) + ckcfs(2)*src_out.H;
+        [mats1,~] = rla.get_fw_mats(kh,src_out,bc,sensor_info,opts);
+        fields1 = rla.compute_fields(kh,src_out,mats1,sensor_info,bc,opts);
+
+        src_out2 = src_info;
+        src_out2.lamcfs = src_out2.lamcfs(:) - hcoefs_use(:);
+        ckcfs = constkappa_models_convert(src_out2.lamcfs,opts.impedance_type,kh);
+        src_out2.lambda = ckcfs(1) + ckcfs(2)*src_out2.H;
+        [mats2,~] = rla.get_fw_mats(kh,src_out2,bc,sensor_info,opts);
+        fields2 = rla.compute_fields(kh,src_out2,mats2,sensor_info,bc,opts);
+
+        uder_est = (fields1.uscat_tgt(:) - fields2.uscat_tgt(:))/2/dh;
+        errs(ig) = norm(uder-uder_est);
+    end
+    if(errs(2)>1e-4)
+        errs
+        ipass = 0;
+        fprintf('failed Impedance test impedance in frechet_ders test (antbarphys): %d\n',errs(2));
+    end
+    
 end
 

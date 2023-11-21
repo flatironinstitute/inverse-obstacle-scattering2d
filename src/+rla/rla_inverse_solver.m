@@ -196,7 +196,8 @@ function [inv_data_all,src_info_out] = rla_inverse_solver(u_meas,bc,...
        src_info.lambda = lam_init(t(:));
    elseif (length(lam_init) == 2 || length(lam_init) == 3)
        src_info.lamcfs = lam_init(:);
-       ckcfs = constkappa_models_convert(src_info.lamcfs,opts.impedance_type);
+       kh = u_meas{ik_list(1)}.kh;
+       ckcfs = constkappa_models_convert(src_info.lamcfs,opts.impedance_type,kh);
        src_info.lambda = ones(n,1)*ckcfs(1) + src_info.H(:)*ckcfs(2);
    else
        src_info.lambda = lam_init(:);

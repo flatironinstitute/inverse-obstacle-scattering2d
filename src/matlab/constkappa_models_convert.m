@@ -29,6 +29,12 @@ function [ckcoefs,jac] = constkappa_models_convert(coefs,impedance_type,kh)
 %                     b2 = 1/(rho_r*c_r*sqrt(1+delta^2/omega^2)), and
 %                     b3 = 1/(rho_r*(1+delta^2/omega^2))
 %
+%        impedance_type = 'antbarphys' is the full model of Antoine-Barucq 
+%          type, with 3 physical parameters (delta,cr,rhor) where 
+%                     c1 = 1/(rhor*cr*sqrt(1+i*delta/omega))
+%                     c2 = -1i/(omega*rhor(1+i*delta/omega))
+%           this implicitly assumes that kh = omega
+%
 % output:
 %
 % ckcoefs - the coefficients c1 and c2 as given above 
@@ -62,6 +68,21 @@ elseif strcmpi(impedance_type,'antbar3')
     jac(2,1) = 1i*coefs(3)*1i/kh;
     jac(2,2) = 0;
     jac(2,3) = -1i*aa/kh;
+elseif strcmpi(impedance_type,'antbarphys')
+    delta = coefs(1);
+    cr = coefs(2);
+    rhor = coefs(3);
+    aa = 1+1i*delta/kh;
+    aasqrt = sqrt(aa);
+
+    ckcoefs(1) = 1/(rhor*cr*aasqrt);
+    ckcoefs(2) = -1i/(kh*rhor*aa);
+    jac(1,1) = -0.5*1i/(rhor*cr*aa*aasqrt*kh);
+    jac(1,2) = -1/(rhor*cr*cr*aasqrt);
+    jac(1,3) = -1/(rhor*rhor*cr*aasqrt);
+    jac(2,1) = -1/(kh*kh*rhor*aa*aa);
+    jac(2,2) = 0;
+    jac(2,3) = 1i/(kh*rhor*rhor*aa);
 else
     error('unknown model selected');
 end
